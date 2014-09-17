@@ -455,6 +455,14 @@ static void Log_Write_Cmd(const AP_Mission::Mission_Command &cmd)
     DataFlash.Log_Write_MavCmd(mission.num_commands(),mav_cmd);
 }
 
+struct PACKED log_Cust2 {
+    LOG_PACKET_HEADER;
+    uint32_t time_ms;
+    uint8_t c_mode;
+    uint32_t test;
+    uint32_t gps_week_ms;
+};
+
 struct PACKED log_Attitude {
     LOG_PACKET_HEADER;
     uint32_t time_ms;
