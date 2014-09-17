@@ -460,7 +460,8 @@ struct PACKED log_Cust2 {
     uint32_t time_ms;
     uint8_t c_mode;
     uint32_t test;
-    uint32_t gps_week_ms;
+    int16_t  battery_voltage;
+    // uint32_t gps_week_ms;
 };
 
 struct PACKED log_Attitude {
@@ -477,14 +478,15 @@ struct PACKED log_Attitude {
 };
 
 // second try at writing a custom packet. First try based on writing a gps packet (in LogFile.cpp)
-static void Log_Write_Custom2(uint8_t mode, const AP_GPS &gps)
+static void Log_Write_Custom2(uint8_t mode) //, const AP_GPS &gps)
 {
     struct log_Cust2 pkt = {
         LOG_PACKET_HEADER_INIT(LOG_CUST2_MSG),
         time_ms         : hal.scheduler->millis(),
         c_mode          : mode,
         test            : 32,
-        gps_week_ms     : gps.time_week_ms(0),
+        battery_voltage     : (int16_t) (battery.voltage() * 100.0f),
+        // gps_week_ms     : gps.time_week_ms(0),
     };
     DataFlash.WriteBlock(&pkt, sizeof(pkt));    
 }
@@ -708,8 +710,8 @@ static const struct LogStructure log_structure[] PROGMEM = {
 #endif
     { LOG_PERFORMANCE_MSG, sizeof(log_Performance), 
       "PM",  "HHIhBHB",    "NLon,NLoop,MaxT,PMT,I2CErr,INSErr,INAVErr" },
-    { LOG_CUST2_MSG, sizeof(log_Cust2),       
-      "CUST", "IMII",      "TimeMS,Mode,FuckTits,TimeMS" },  
+    { LOG_CUST2_MSG, sizeof(log_Cust2),       // note, gps stuff removed for ease of viewing logs for now
+      "CUST", "IMIh",      "TimeMS,Mode,PoopBalls,Voltage" },  
     { LOG_ATTITUDE_MSG, sizeof(log_Attitude),       
       "ATT", "IccccCCCC",    "TimeMS,DesRoll,Roll,DesPitch,Pitch,DesYaw,Yaw,ErrRP,ErrYaw" },
     { LOG_MODE_MSG, sizeof(log_Mode),
@@ -795,7 +797,7 @@ static void Log_Write_AutoTuneDetails(int16_t angle_cd, float rate_cds) {}
 static void Log_Write_Current() {}
 static void Log_Write_Compass() {}
 static void Log_Write_Attitude() {}
-static void Log_Write_Custom2(uint8_t mode,const AP_GPS &gps) {}
+static void Log_Write_Custom2(uint8_t mode) {} //,const AP_GPS &gps) {}
 static void Log_Write_Data(uint8_t id, int16_t value){}
 static void Log_Write_Data(uint8_t id, uint16_t value){}
 static void Log_Write_Data(uint8_t id, int32_t value){}
