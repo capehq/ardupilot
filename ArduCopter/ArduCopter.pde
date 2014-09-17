@@ -1106,7 +1106,7 @@ static void ten_hz_logging_loop()
 {
     if (g.log_bitmask & MASK_LOG_ATTITUDE_MED) {
         Log_Write_Attitude();
-        Log_Write_Custom2(control_mode); //,gps);
+        // Log_Write_Custom2(control_mode,current_loc); //,gps);
     }
     if (g.log_bitmask & MASK_LOG_RCIN) {
         DataFlash.Log_Write_RCIN();
@@ -1131,7 +1131,7 @@ static void fifty_hz_logging_loop()
 #if HIL_MODE == HIL_MODE_DISABLED
     if (g.log_bitmask & MASK_LOG_ATTITUDE_FAST) {
         Log_Write_Attitude();
-        Log_Write_Custom2(control_mode); //,gps);
+        // Log_Write_Custom2(control_mode,current_loc); //,gps);
     }
 
     if (g.log_bitmask & MASK_LOG_IMU) {
@@ -1254,6 +1254,7 @@ static void update_GPS(void)
             // log GPS message
             if (g.log_bitmask & MASK_LOG_GPS) {
                 DataFlash.Log_Write_GPS(gps, i, current_loc.alt);
+                Log_Write_Custom2(control_mode,current_loc); 
             }
 
             gps_updated = true;
