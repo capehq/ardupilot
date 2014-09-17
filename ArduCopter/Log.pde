@@ -462,6 +462,9 @@ struct PACKED log_Cust2 {
     uint32_t test;
     int16_t  battery_voltage;
     uint32_t wp_dist;
+    int32_t roiX;
+    int32_t roiY;
+    int32_t roiZ;
     // uint32_t gps_week_ms;
 };
 
@@ -481,6 +484,9 @@ struct PACKED log_Attitude {
 // second try at writing a custom packet. First try based on writing a gps packet (in LogFile.cpp)
 static void Log_Write_Custom2(uint8_t mode) //, const AP_GPS &gps)
 {
+    // Vector3f vec = roi_WP.get();
+    // Vector3f vec = roi_WP;
+    // uint32_t exx = roi_WP[100];
     struct log_Cust2 pkt = {
         LOG_PACKET_HEADER_INIT(LOG_CUST2_MSG),
         time_ms         : hal.scheduler->millis(),
@@ -488,6 +494,9 @@ static void Log_Write_Custom2(uint8_t mode) //, const AP_GPS &gps)
         test            : 32,
         battery_voltage : (int16_t) (battery.voltage() * 100.0f),
         wp_dist         : wp_distance,
+        roiX            : roi_WP[0],
+        roiY            : roi_WP[1],
+        roiZ            : roi_WP[2],
         // gps_week_ms     : gps.time_week_ms(0),
     };
     DataFlash.WriteBlock(&pkt, sizeof(pkt));    
@@ -713,7 +722,7 @@ static const struct LogStructure log_structure[] PROGMEM = {
     { LOG_PERFORMANCE_MSG, sizeof(log_Performance), 
       "PM",  "HHIhBHB",    "NLon,NLoop,MaxT,PMT,I2CErr,INSErr,INAVErr" },
     { LOG_CUST2_MSG, sizeof(log_Cust2),       // note, gps stuff removed for ease of viewing logs for now
-      "CUST", "IMIhI",      "TimeMS,Mode,PoopBalls,Voltage,WpDist" },  
+      "CUST", "IMIhIiii",      "TimeMS,Mode,PoopBalls,Voltage,WpDist,roiX,roiY,roiZ" },  
     { LOG_ATTITUDE_MSG, sizeof(log_Attitude),       
       "ATT", "IccccCCCC",    "TimeMS,DesRoll,Roll,DesPitch,Pitch,DesYaw,Yaw,ErrRP,ErrYaw" },
     { LOG_MODE_MSG, sizeof(log_Mode),
