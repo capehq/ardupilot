@@ -476,6 +476,19 @@ struct PACKED log_Attitude {
     uint16_t error_yaw;
 };
 
+// second try at writing a custom packet. First try based on writing a gps packet (in LogFile.cpp)
+static void Log_Write_Custom2(uint8_t mode, const AP_GPS &gps)
+{
+    struct log_Cust2 pkt = {
+        LOG_PACKET_HEADER_INIT(LOG_CUST2_MSG),
+        time_ms         : hal.scheduler->millis(),
+        c_mode          : mode,
+        test            : 32,
+        gps_week_ms     : gps.time_week_ms(0),
+    };
+    DataFlash.WriteBlock(&pkt, sizeof(pkt));    
+}
+
 // Write an attitude packet
 static void Log_Write_Attitude()
 {
