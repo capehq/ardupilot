@@ -461,6 +461,7 @@ struct PACKED log_Cust2 {
     uint8_t c_mode;
     uint32_t test;
     int16_t  battery_voltage;
+    uint32_t wp_dist;
     // uint32_t gps_week_ms;
 };
 
@@ -485,7 +486,8 @@ static void Log_Write_Custom2(uint8_t mode) //, const AP_GPS &gps)
         time_ms         : hal.scheduler->millis(),
         c_mode          : mode,
         test            : 32,
-        battery_voltage     : (int16_t) (battery.voltage() * 100.0f),
+        battery_voltage : (int16_t) (battery.voltage() * 100.0f),
+        wp_dist         : wp_distance,
         // gps_week_ms     : gps.time_week_ms(0),
     };
     DataFlash.WriteBlock(&pkt, sizeof(pkt));    
@@ -711,7 +713,7 @@ static const struct LogStructure log_structure[] PROGMEM = {
     { LOG_PERFORMANCE_MSG, sizeof(log_Performance), 
       "PM",  "HHIhBHB",    "NLon,NLoop,MaxT,PMT,I2CErr,INSErr,INAVErr" },
     { LOG_CUST2_MSG, sizeof(log_Cust2),       // note, gps stuff removed for ease of viewing logs for now
-      "CUST", "IMIh",      "TimeMS,Mode,PoopBalls,Voltage" },  
+      "CUST", "IMIhI",      "TimeMS,Mode,PoopBalls,Voltage,WpDist" },  
     { LOG_ATTITUDE_MSG, sizeof(log_Attitude),       
       "ATT", "IccccCCCC",    "TimeMS,DesRoll,Roll,DesPitch,Pitch,DesYaw,Yaw,ErrRP,ErrYaw" },
     { LOG_MODE_MSG, sizeof(log_Mode),
