@@ -708,6 +708,8 @@ static const struct LogStructure log_structure[] PROGMEM = {
 #endif
     { LOG_PERFORMANCE_MSG, sizeof(log_Performance), 
       "PM",  "HHIhBHB",    "NLon,NLoop,MaxT,PMT,I2CErr,INSErr,INAVErr" },
+    { LOG_CUST2_MSG, sizeof(log_Cust2),       
+      "CUST", "IMII",      "TimeMS,Mode,FuckTits,TimeMS" },  
     { LOG_ATTITUDE_MSG, sizeof(log_Attitude),       
       "ATT", "IccccCCCC",    "TimeMS,DesRoll,Roll,DesPitch,Pitch,DesYaw,Yaw,ErrRP,ErrYaw" },
     { LOG_MODE_MSG, sizeof(log_Mode),
@@ -793,6 +795,7 @@ static void Log_Write_AutoTuneDetails(int16_t angle_cd, float rate_cds) {}
 static void Log_Write_Current() {}
 static void Log_Write_Compass() {}
 static void Log_Write_Attitude() {}
+static void Log_Write_Custom2(uint8_t mode,const AP_GPS &gps) {}
 static void Log_Write_Data(uint8_t id, int16_t value){}
 static void Log_Write_Data(uint8_t id, uint16_t value){}
 static void Log_Write_Data(uint8_t id, int32_t value){}
