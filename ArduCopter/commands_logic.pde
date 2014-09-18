@@ -843,6 +843,8 @@ static bool do_guided(const AP_Mission::Mission_Command& cmd)
         case MAV_CMD_NAV_WAYPOINT:
             // set wp_nav's destination
             pos_or_vel = pv_location_to_vector(cmd.content.location);
+            // Location next_wp_location = cmd.content.location; // gabe added
+            wp_distance2 = get_distance(current_loc,cmd.content.location); // gabe added
             guided_set_destination(pos_or_vel);
             return true;
             break;

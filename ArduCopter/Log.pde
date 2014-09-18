@@ -498,7 +498,7 @@ static void Log_Write_Custom2(uint8_t mode, const Location &current_loc, const L
         c_mode          : mode,
         test            : 32,
         battery_voltage : (int16_t) (battery.voltage() * 100.0f),
-        wp_dist         : wp_distance,
+        wp_dist         : wp_distance2,
         // roiX            : roi_WP[0],
         // roiY            : roi_WP[1],
         // roiZ            : roi_WP[2],

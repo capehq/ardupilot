@@ -495,6 +495,7 @@ static int32_t home_bearing;
 static int32_t home_distance;
 // distance between plane and next waypoint in cm.
 static uint32_t wp_distance;
+static uint32_t wp_distance2=0; // gabe added. Different way of calculating the distance kinda
 static uint8_t land_state;              // records state of land (flying to location, descending)
 
 static struct Location roi_gps_coords; // gabe added...need to initialize?
