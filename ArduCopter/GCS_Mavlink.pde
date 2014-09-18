@@ -1099,7 +1099,7 @@ void GCS_MAVLINK::handleMessage(mavlink_message_t* msg)
             roi_loc.lat = (int32_t)(packet.param5 * 1.0e7f);
             roi_loc.lng = (int32_t)(packet.param6 * 1.0e7f);
             roi_loc.alt = (int32_t)(packet.param7 * 100.0f);
-            roi_gps_coords=roi_loc; // gabe added
+            roi_gps_coords=roi_loc; // gabe added. If this doesn't work, maybe assign lat/lng/alt separately
             set_auto_yaw_roi(roi_loc);
             result = MAV_RESULT_ACCEPTED;
             // Log_Write_Custom2(control_mode,current_loc); 
