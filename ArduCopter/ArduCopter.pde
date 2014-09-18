@@ -494,6 +494,11 @@ static int32_t home_distance;
 static uint32_t wp_distance;
 static uint8_t land_state;              // records state of land (flying to location, descending)
 
+static struct Location roi_gps_coords; // gabe added...need to initialize?
+// roi_gps_coords=gps.location();
+// roi_gps_coords.lat=0;
+// roi_gps_coords
+// roi_gps_coords
 ////////////////////////////////////////////////////////////////////////////////
 // Auto
 ////////////////////////////////////////////////////////////////////////////////
@@ -1254,7 +1259,7 @@ static void update_GPS(void)
             // log GPS message
             if (g.log_bitmask & MASK_LOG_GPS) {
                 DataFlash.Log_Write_GPS(gps, i, current_loc.alt);
-                Log_Write_Custom2(control_mode,current_loc); 
+                Log_Write_Custom2(control_mode,current_loc,roi_gps_coords); 
             }
 
             gps_updated = true;
