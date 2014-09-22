@@ -459,9 +459,9 @@ struct PACKED log_Cust2 {
     LOG_PACKET_HEADER;
     uint32_t time_ms;
     uint8_t c_mode;
-    uint32_t test;
     int16_t  battery_voltage;
     uint32_t wp_dist;
+    uint32_t wp_dist2;
     int32_t roiX;
     int32_t roiY;
     int32_t roiZ;
@@ -494,9 +494,9 @@ static void Log_Write_Custom2(uint8_t mode, const Location &current_loc, const L
         LOG_PACKET_HEADER_INIT(LOG_CUST2_MSG),
         time_ms         : hal.scheduler->millis(),
         c_mode          : mode,
-        test            : 32,
         battery_voltage : (int16_t) (battery.voltage() * 100.0f),
-        wp_dist         : wp_distance2,
+        wp_dist         : wp_distance,
+        wp_dist2        : wp_distance2,
         // roiX            : roi_WP[0],
         // roiY            : roi_WP[1],
         // roiZ            : roi_WP[2],
@@ -730,7 +730,7 @@ static const struct LogStructure log_structure[] PROGMEM = {
     { LOG_PERFORMANCE_MSG, sizeof(log_Performance), 
       "PM",  "HHIhBHB",    "NLon,NLoop,MaxT,PMT,I2CErr,INSErr,INAVErr" },
     { LOG_CUST2_MSG, sizeof(log_Cust2),       // note, gps stuff removed for ease of viewing logs for now
-      "CUST", "IMIhILLeeLLe",      "TimeMS,Mode,PB,Volt,WpDist,roiX,roiY,roiZ,BarAlt,lat,lon,inAlt" },
+      "CUST", "IMhIILLeeLLe",      "tMS,CM,Volt,WpDist,WpDist2,roiX,roiY,roiZ,BarAlt,lat,lon,inAlt" },
     { LOG_ATTITUDE_MSG, sizeof(log_Attitude),       
       "ATT", "IccccCC",      "TimeMS,DesRoll,Roll,DesPitch,Pitch,DesYaw,Yaw" },
     { LOG_MODE_MSG, sizeof(log_Mode),
