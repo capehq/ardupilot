@@ -1263,7 +1263,7 @@ static void update_GPS(void)
             // log GPS message
             if (should_log(MASK_LOG_GPS)) {
                 DataFlash.Log_Write_GPS(gps, i, current_loc.alt);
-                Log_Write_Custom2(control_mode,current_loc,roi_gps_coords); 
+                Log_Write_Custom(control_mode,current_loc,roi_gps_coords); 
             }
 
             gps_updated = true;

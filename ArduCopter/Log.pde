@@ -455,7 +455,7 @@ static void Log_Write_Cmd(const AP_Mission::Mission_Command &cmd)
     DataFlash.Log_Write_MavCmd(mission.num_commands(),mav_cmd);
 }
 
-struct PACKED log_Cust2 {
+struct PACKED log_Cust {
     LOG_PACKET_HEADER;
     uint32_t time_ms;
     uint8_t c_mode;
@@ -486,14 +486,14 @@ struct PACKED log_Attitude {
 };
 
 // second try at writing a custom packet. First try based on writing a gps packet (in LogFile.cpp)
-static void Log_Write_Custom2(uint8_t mode, const Location &current_loc, const Location &roi_gps_coords) //, const AP_GPS &gps)
+static void Log_Write_Custom(uint8_t mode, const Location &current_loc, const Location &roi_gps_coords) //, const AP_GPS &gps)
 {
     // Vector3f vec = roi_WP.get();
     // Vector3f vec = roi_WP;
     // uint32_t exx = roi_WP[100];
     // Location temp = roi_loc; // doesn't compile, roi_loc is a local variable in GCS_Mavlink.pde
-    struct log_Cust2 pkt = {
-        LOG_PACKET_HEADER_INIT(LOG_CUST2_MSG),
+    struct log_Cust pkt = {
+        LOG_PACKET_HEADER_INIT(LOG_CUST_MSG),
         time_ms         : hal.scheduler->millis(),
         c_mode          : mode,
         battery_voltage : (int16_t) (battery.voltage() * 100.0f),
@@ -733,7 +733,7 @@ static const struct LogStructure log_structure[] PROGMEM = {
 #endif
     { LOG_PERFORMANCE_MSG, sizeof(log_Performance), 
       "PM",  "HHIhBHB",    "NLon,NLoop,MaxT,PMT,I2CErr,INSErr,INAVErr" },
-    { LOG_CUST2_MSG, sizeof(log_Cust2),       // note, gps stuff removed for ease of viewing logs for now
+    { LOG_CUST_MSG, sizeof(log_Cust),       // note, gps stuff removed for ease of viewing logs for now
       "CUST", "IMhIILLeeLLe",      "tMS,CM,Volt,WpDist,WpDist2,roiX,roiY,roiZ,BarAlt,lat,lon,inAlt" },
     { LOG_ATTITUDE_MSG, sizeof(log_Attitude),       
       "ATT", "IccccCCCC",    "TimeMS,DesRoll,Roll,DesPitch,Pitch,DesYaw,Yaw,ErrRP,ErrYaw" },
@@ -820,7 +820,7 @@ static void Log_Write_AutoTuneDetails(int16_t angle_cd, float rate_cds) {}
 static void Log_Write_Current() {}
 static void Log_Write_Compass() {}
 static void Log_Write_Attitude() {}
-static void Log_Write_Custom2(uint8_t mode, const Location &current_loc, const Location &roi_gps_coords) {} //,const AP_GPS &gps) {}
+static void Log_Write_Custom(uint8_t mode, const Location &current_loc, const Location &roi_gps_coords) {} //,const AP_GPS &gps) {}
 static void Log_Write_Data(uint8_t id, int16_t value){}
 static void Log_Write_Data(uint8_t id, uint16_t value){}
 static void Log_Write_Data(uint8_t id, int32_t value){}
