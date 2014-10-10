@@ -470,7 +470,7 @@ struct PACKED log_Cust {
     int32_t  longitude;
     int32_t  IN_altitude;
     uint8_t rtl_state_log;
-    float    current_total;
+    float    b_current_total;
     // uint32_t gps_week_ms;
 };
 
@@ -485,7 +485,7 @@ struct PACKED log_Attitude {
     uint16_t yaw;
 };
 
-// second try at writing a custom packet. First try based on writing a gps packet (in LogFile.cpp)
+// Writing a custom packet
 static void Log_Write_Custom(uint8_t mode, const Location &current_loc, const Location &roi_gps_coords) //, const AP_GPS &gps)
 {
     // Vector3f vec = roi_WP.get();
@@ -536,6 +536,7 @@ static void Log_Write_Custom(uint8_t mode, const Location &current_loc, const Lo
         longitude       : current_loc.lng,
         IN_altitude     : current_loc.alt,
         rtl_state_log   : rtl_state_int,
+        b_current_total : battery.current_total_mah(),
         // gps_week_ms     : gps.time_week_ms(0),
     };
     DataFlash.WriteBlock(&pkt, sizeof(pkt));    
@@ -759,7 +760,7 @@ static const struct LogStructure log_structure[] PROGMEM = {
     { LOG_PERFORMANCE_MSG, sizeof(log_Performance), 
       "PM",  "HHIhBHB",    "NLon,NLoop,MaxT,PMT,I2CErr,INSErr,INAVErr" },
     { LOG_CUST_MSG, sizeof(log_Cust),       // note, gps stuff removed for ease of viewing logs for now
-      "CUST", "IMhIILLeeLLeM",      "tMS,CM,Volt,WpD,WpD2,roiX,roiY,roiZ,BarAlt,lat,lon,inAlt,RS" },
+      "CUST", "IMhIILLeeLLeMf",      "tMS,CM,Volt,WpD,WpD2,roiX,roiY,roiZ,BarAlt,lat,lon,inAlt,RS,ct" },
     { LOG_ATTITUDE_MSG, sizeof(log_Attitude),       
       "ATT", "IccccCC",      "TimeMS,DesRoll,Roll,DesPitch,Pitch,DesYaw,Yaw" },
     { LOG_MODE_MSG, sizeof(log_Mode),
