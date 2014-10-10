@@ -495,7 +495,7 @@ static uint32_t wp_distance;
 static uint32_t wp_distance2=0; // gabe added. Different way of calculating the distance kinda
 static uint8_t land_state;              // records state of land (flying to location, descending)
 
-static struct Location roi_gps_coords; // gabe added...need to initialize?
+static struct Location roi_gps_coords; // gabe added...initializes to 0,0,0 I believe
 // roi_gps_coords=gps.location();
 // roi_gps_coords.lat=0;
 // roi_gps_coords
@@ -515,6 +515,7 @@ static GuidedMode guided_mode;  // controls which controller is run (pos or vel)
 ////////////////////////////////////////////////////////////////////////////////
 RTLState rtl_state;  // records state of rtl (initial climb, returning home, etc)
 bool rtl_state_complete; // set to true if the current state is completed
+static uint8_t rtl_state_int; // gabe added
 
 ////////////////////////////////////////////////////////////////////////////////
 // Circle
