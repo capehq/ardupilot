@@ -515,7 +515,7 @@ static GuidedMode guided_mode;  // controls which controller is run (pos or vel)
 ////////////////////////////////////////////////////////////////////////////////
 RTLState rtl_state;  // records state of rtl (initial climb, returning home, etc)
 bool rtl_state_complete; // set to true if the current state is completed
-static uint8_t rtl_state_int=800; // gabe added
+static uint32_t rtl_state_int; // gabe added (changed to 32 from 8 since would seem to output in fashion as control mode)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Circle

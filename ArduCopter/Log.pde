@@ -469,7 +469,7 @@ struct PACKED log_Cust {
     int32_t  latitude;
     int32_t  longitude;
     int32_t  IN_altitude;
-    uint8_t rtl_state_log;
+    uint32_t rtl_state_log;
     float    b_current_total;
     // uint32_t gps_week_ms;
 };
@@ -501,23 +501,23 @@ static void Log_Write_Custom(uint8_t mode, const Location &current_loc, const Lo
     // } else if (rtl_state==) {
     //     rtl_state_int=1;
     // }
-    // switch (rtl_state) {
-    // case InitialClimb:
-    //     rtl_state_int=1;
-    //     break;
-    // case ReturnHome:
-    //     rtl_state_int=2;
-    //     break;
-    // case LoiterAtHome:
-    //     rtl_state_int=3;
-    //     break;
-    // case FinalDescent:
-    //     rtl_state_int=4;
-    //     break;
-    // case Land:
-    //     rtl_state_int=5;
-    //     break;
-    // }
+    switch (rtl_state) {
+    case InitialClimb:
+        rtl_state_int=1;
+        break;
+    case ReturnHome:
+        rtl_state_int=2;
+        break;
+    case LoiterAtHome:
+        rtl_state_int=3;
+        break;
+    case FinalDescent:
+        rtl_state_int=4;
+        break;
+    case Land:
+        rtl_state_int=5;
+        break;
+    }
     struct log_Cust pkt = {
         LOG_PACKET_HEADER_INIT(LOG_CUST_MSG),
         time_ms         : hal.scheduler->millis(),
@@ -760,7 +760,7 @@ static const struct LogStructure log_structure[] PROGMEM = {
     { LOG_PERFORMANCE_MSG, sizeof(log_Performance), 
       "PM",  "HHIhBHB",    "NLon,NLoop,MaxT,PMT,I2CErr,INSErr,INAVErr" },
     { LOG_CUST_MSG, sizeof(log_Cust),       // note, gps stuff removed for ease of viewing logs for now
-      "CUST", "IMhIILLeeLLeMf",      "tMS,CM,Volt,WpD,WpD2,roiX,roiY,roiZ,BarAlt,lat,lon,inAlt,RS,ct" },
+      "CUST", "IMhIILLeeLLeIf",      "tMS,CM,Volt,WpD,WpD2,roiX,roiY,roiZ,BarAlt,lat,lon,inAlt,RS,ct" },
     { LOG_ATTITUDE_MSG, sizeof(log_Attitude),       
       "ATT", "IccccCC",      "TimeMS,DesRoll,Roll,DesPitch,Pitch,DesYaw,Yaw" },
     { LOG_MODE_MSG, sizeof(log_Mode),
