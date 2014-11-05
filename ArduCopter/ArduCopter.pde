@@ -931,6 +931,8 @@ void setup()
 
     init_ardupilot();
 
+    init_arm_motors(); // want to arm motors to inialize stuff and start logging as soon as the batter of the helmet is plugged in
+
     // initialise the main loop scheduler
     scheduler.init(&scheduler_tasks[0], sizeof(scheduler_tasks)/sizeof(scheduler_tasks[0]));
 }
@@ -1195,7 +1197,7 @@ static void one_hz_loop()
     }
 
     // auto disarm checks
-    auto_disarm_check();
+    // auto_disarm_check(); // don't want to disarm the motors due to not having throttle
 
     if (!motors.armed()) {
         // make it possible to change ahrs orientation at runtime during initial config
