@@ -1253,6 +1253,7 @@ static void update_optical_flow(void)
 // called at 50hz
 static void update_GPS(void)
 {
+    DataFlash.Log_Write_GPS(gps, 0, current_loc.alt);
     static uint32_t last_gps_reading[GPS_MAX_INSTANCES];   // time of last gps message
     static uint8_t ground_start_count = 10;     // counter used to grab at least 10 reads before commiting the Home location
     bool report_gps_glitch;
