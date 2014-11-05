@@ -1196,7 +1196,7 @@ static void one_hz_loop()
 // called at 50hz
 static void update_GPS(void)
 {
-    DataFlash.Log_Write_GPS(gps, 0, current_loc.alt);
+    // DataFlash.Log_Write_GPS(gps, 0, current_loc.alt);
     static uint32_t last_gps_reading[GPS_MAX_INSTANCES];   // time of last gps message
     static uint8_t ground_start_count = 10;     // counter used to grab at least 10 reads before commiting the Home location
     bool report_gps_glitch;
@@ -1209,6 +1209,7 @@ static void update_GPS(void)
         if (gps.last_message_time_ms(i) != last_gps_reading[i]) {
             last_gps_reading[i] = gps.last_message_time_ms(i);
 
+            DataFlash.Log_Write_GPS(gps, 0, current_loc.alt);
             // log GPS message
             if (should_log(MASK_LOG_GPS)) {
                 DataFlash.Log_Write_GPS(gps, i, current_loc.alt);
