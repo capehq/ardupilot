@@ -220,7 +220,7 @@ static bool init_arm_motors()
     output_min();
 
     // finally actually arm the motors
-    motors.armed(true);
+    // motors.armed(true);
 
     // log arming to dataflash
     Log_Write_Event(DATA_ARMED);
@@ -652,7 +652,7 @@ static void init_disarm_motors()
 
     // suspend logging
     if (!(g.log_bitmask & MASK_LOG_WHEN_DISARMED)) {
-        DataFlash.EnableWrites(false);
+        // DataFlash.EnableWrites(false); // we don't want to stop logging when auto-disarm motors
     }
 
     // disable gps velocity based centrefugal force compensation
