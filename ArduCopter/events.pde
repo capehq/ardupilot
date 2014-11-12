@@ -134,7 +134,7 @@ static void failsafe_battery_event(void)
                     init_disarm_motors();
 
                 // set mode to RTL or LAND
-                } else if (home_distance > wp_nav.get_wp_radius()) {
+                } else if (g.failsafe_battery_enabled == FS_BATT_RTL && home_distance > wp_nav.get_wp_radius()) {
                     if (!set_mode(RTL)) {
                         set_mode_land_with_pause();
                     }
