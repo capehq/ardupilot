@@ -11,11 +11,22 @@ static int16_t _cape_wearable_longitude;
 static int16_t _cape_wearable_latitude;
 static float _cape_wearable_altitude;
 
+#define CAPE_RAIL_DISTANCE_THRESHOLD 150.f // Distance in cm
+
+static AP_Mission::Mission_Command _cape_prev_nav_cmd;
+static AP_Mission::Mission_Command _cape_curr_nav_cmd;
+static bool _cape_nav_cmds_remaining;
 
 void Cape_init() {
     // Set up Serial 4
     if(hal.uartE) {
         hal.uartE->begin(9600, 32, 32);
+    }
+
+    // Load first navigation commands
+    _cape_nav_cmds_remaining = false;
+    if(mission.get_next_nav_cmd(1, _cape_prev_nav_cmd)) {
+        _cape_nav_cmds_remaining = mission.get_next_nav_cmd(_cape_prev_nav_cmd.index + 1, _cape_curr_nav_cmd);
     }
 }
 
@@ -23,6 +34,7 @@ void Cape_FastLoop() {
     if(Cape_ReadFromWearable()) {
         // New position received!
 
+        Cape_UpdateFollowPosition();
 
     }
 }
@@ -78,8 +90,54 @@ int Cape_ValidateMessage(uint8_t byte) {
     return valid_message;
 }
 
+void Cape_UpdateFollowPosition() {
 
+    // If no waypoints remaining, abort
+    if(!_cape_nav_cmds_remaining)
+      return;
 
+    // Drone location
+    if(!inertial_nav.position_ok())
+        return;
+    int32_t longitude = inertial_nav.get_longitude();
+    int32_t latitude = inertial_nav.get_latitude();
+    float altitude = inertial_nav.get_altitude();
+
+    // Calculate distances in cm
+    float lon_to_cm_scaling = longitude_scale(ahrs.get_home()) * LATLON_TO_CM;
+
+    // Curr waypoint to prev waypoint
+    int32_t wp_dlng = _cape_curr_nav_cmd.content.location.lng - _cape_prev_nav_cmd.content.location.lng;
+    float wp_dlng_f = wp_dlng * lon_to_cm_scaling;
+    int32_t wp_dlat = _cape_curr_nav_cmd.content.location.lat - _cape_prev_nav_cmd.content.location.lat;
+    float wp_dlat_f = wp_dlat * LATLON_TO_CM;
+    float wp_dalt_f = _cape_curr_nav_cmd.content.location.alt - _cape_prev_nav_cmd.content.location.alt;
+
+    // Normalize waypoint-to-prev-waypoint
+    float norm_wp = sqrtf(powf(wp_dlng_f, 2) + powf(wp_dlat_f, 2) + powf(wp_dalt_f, 2));
+    wp_dlng_f /= norm_wp;
+    wp_dlat_f /= norm_wp;
+    wp_dalt_f /= norm_wp;
+
+    // Curr waypoint to wearable
+    int32_t ww_dlng = _cape_curr_nav_cmd.content.location.lng - _cape_wearable_longitude;
+    float ww_dlng_f = ww_dlng * lon_to_cm_scaling;
+    int32_t ww_dlat = _cape_curr_nav_cmd.content.location.lat - _cape_wearable_latitude;
+    float ww_dlat_f = ww_dlat * LATLON_TO_CM;
+    float ww_dalt_f = _cape_curr_nav_cmd.content.location.alt - _cape_wearable_altitude;
+
+    // Dot product of norm(waypoint to prev waypoint) and (waypoint to wearable)
+    float distance_to_plane = (ww_dlng_f * wp_dlng_f) + (ww_dlat_f * wp_dlat_f) + (ww_dalt_f * wp_dalt_f);
+
+    if(distance_to_plane <= CAPE_RAIL_DISTANCE_THRESHOLD) {
+        // Move to next waypoint
+        _cape_prev_nav_cmd = _cape_curr_nav_cmd;
+        _cape_nav_cmds_remaining = mission.get_next_nav_cmd(_cape_prev_nav_cmd.index + 1, _cape_curr_nav_cmd);
+        if(_cape_nav_cmds_remaining) {
+            mission.set_current_cmd(_cape_curr_nav_cmd.index);
+        }
+    }
+}
 
 
 
