@@ -1,14 +1,13 @@
 /// -*- tab-width: 4; Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil -*-
 
-
 // Format: ["CAPE", longitude (int32_t), latitude (int32_t), altitude (float), checksum (uint16_t)]
 #define CAPE_MESSAGE_LENGTH 18            // (4 + sizeof(int32_t) + sizeof(int32_t) + sizeof(float) + sizeof(uint16_t))
 static uint8_t _cape_rx_buffer[CAPE_MESSAGE_LENGTH];
 static uint8_t _cape_prefix[] = "CAPE";
 static uint8_t _cape_bytes_received = 0;
 
-static int16_t _cape_wearable_longitude;
-static int16_t _cape_wearable_latitude;
+static int32_t _cape_wearable_longitude;
+static int32_t _cape_wearable_latitude;
 static float _cape_wearable_altitude;
 
 #define CAPE_RAIL_DISTANCE_THRESHOLD 1000.f // Distance in cm
@@ -31,12 +30,34 @@ void Cape_init() {
         hal.uartE->printf("Prev index %d, cur index %d\n", _cape_prev_nav_cmd.index, _cape_curr_nav_cmd.index);
     }
 }
-
+static bool armed_once = false, waiting_for_takeoff = true;
 void Cape_FastLoop() {
     if(Cape_ReadFromWearable()) {
         // New position received!
+        if(!armed_once) {
+            set_mode(GUIDED);
+            pre_arm_checks(true);
+            if(ap.pre_arm_check && arm_checks(true)) {
+                if (init_arm_motors()) {
+                    guided_takeoff_start(_cape_prev_nav_cmd.content.location.alt);
+                    armed_once = true;
+                }
+            }
+        }
 
-        Cape_UpdateFollowPosition();
+        if(armed_once && waiting_for_takeoff) {
+            if(inertial_nav.position_ok()) {
+                if(fabsf(_cape_prev_nav_cmd.content.location.alt - inertial_nav.get_altitude()) < 100.f) {
+                    set_mode(AUTO);
+                    waiting_for_takeoff = false;
+                }
+            }
+        }
+
+        if(armed_once && !waiting_for_takeoff) {
+            Cape_UpdateFollowPosition();
+            Cape_SetROI();
+        }
 
     }
 }
@@ -133,7 +154,7 @@ void Cape_UpdateFollowPosition() {
     float distance_to_plane = (ww_dlng_f * wp_dlng_f) + (ww_dlat_f * wp_dlat_f) + (ww_dalt_f * wp_dalt_f);
     hal.uartE->printf("Distance %f\n", distance_to_plane);
 
-    if(distance_to_plane <= CAPE_RAIL_DISTANCE_THRESHOLD) {
+    if(fabsf(distance_to_plane) <= CAPE_RAIL_DISTANCE_THRESHOLD) {
         // Move to next waypoint
         _cape_prev_nav_cmd = _cape_curr_nav_cmd;
         _cape_nav_cmds_remaining = mission.get_next_nav_cmd(_cape_prev_nav_cmd.index + 1, _cape_curr_nav_cmd);
@@ -141,6 +162,15 @@ void Cape_UpdateFollowPosition() {
             mission.set_current_cmd(_cape_curr_nav_cmd.index);
         }
     }
+}
+
+void Cape_SetROI() {
+    Location roi_loc;
+    roi_loc.lat = _cape_wearable_latitude;
+    roi_loc.lng = _cape_wearable_longitude;
+    roi_loc.alt = _cape_wearable_altitude;
+    roi_gps_coords=roi_loc; // gabe added. If this doesn't work, maybe assign lat/lng/alt separately
+    set_auto_yaw_roi(roi_loc);
 }
 
 
