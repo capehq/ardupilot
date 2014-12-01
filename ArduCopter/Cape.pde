@@ -11,7 +11,7 @@ static int16_t _cape_wearable_longitude;
 static int16_t _cape_wearable_latitude;
 static float _cape_wearable_altitude;
 
-#define CAPE_RAIL_DISTANCE_THRESHOLD 150.f // Distance in cm
+#define CAPE_RAIL_DISTANCE_THRESHOLD 1000.f // Distance in cm
 
 static AP_Mission::Mission_Command _cape_prev_nav_cmd;
 static AP_Mission::Mission_Command _cape_curr_nav_cmd;
@@ -21,12 +21,14 @@ void Cape_init() {
     // Set up Serial 4
     if(hal.uartE) {
         hal.uartE->begin(9600, 32, 32);
+        hal.uartE->printf("There are %d commands\n", mission.num_commands());
     }
 
     // Load first navigation commands
     _cape_nav_cmds_remaining = false;
     if(mission.get_next_nav_cmd(1, _cape_prev_nav_cmd)) {
         _cape_nav_cmds_remaining = mission.get_next_nav_cmd(_cape_prev_nav_cmd.index + 1, _cape_curr_nav_cmd);
+        hal.uartE->printf("Prev index %d, cur index %d\n", _cape_prev_nav_cmd.index, _cape_curr_nav_cmd.index);
     }
 }
 
@@ -97,8 +99,9 @@ void Cape_UpdateFollowPosition() {
       return;
 
     // Drone location
-    if(!inertial_nav.position_ok())
+    if(!inertial_nav.position_ok()) {
         return;
+    }
     int32_t longitude = inertial_nav.get_longitude();
     int32_t latitude = inertial_nav.get_latitude();
     float altitude = inertial_nav.get_altitude();
@@ -128,6 +131,7 @@ void Cape_UpdateFollowPosition() {
 
     // Dot product of norm(waypoint to prev waypoint) and (waypoint to wearable)
     float distance_to_plane = (ww_dlng_f * wp_dlng_f) + (ww_dlat_f * wp_dlat_f) + (ww_dalt_f * wp_dalt_f);
+    hal.uartE->printf("Distance %f\n", distance_to_plane);
 
     if(distance_to_plane <= CAPE_RAIL_DISTANCE_THRESHOLD) {
         // Move to next waypoint
