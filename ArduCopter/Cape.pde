@@ -15,6 +15,8 @@ static float _cape_wearable_altitude;
 static AP_Mission::Mission_Command _cape_prev_nav_cmd;
 static AP_Mission::Mission_Command _cape_curr_nav_cmd;
 static bool _cape_nav_cmds_remaining;
+static bool _cape_armed_once = false;
+static bool _cape_waiting_for_takeoff = true;
 
 void Cape_init() {
     // Set up Serial 4
@@ -30,31 +32,32 @@ void Cape_init() {
         hal.uartE->printf("Prev index %d, cur index %d\n", _cape_prev_nav_cmd.index, _cape_curr_nav_cmd.index);
     }
 }
-static bool armed_once = false, waiting_for_takeoff = true;
+
 void Cape_FastLoop() {
     if(Cape_ReadFromWearable()) {
         // New position received!
-        if(!armed_once) {
+        if(!_cape_armed_once) {
             set_mode(GUIDED);
             pre_arm_checks(true);
             if(ap.pre_arm_check && arm_checks(true)) {
                 if (init_arm_motors()) {
                     guided_takeoff_start(_cape_prev_nav_cmd.content.location.alt);
-                    armed_once = true;
+                    _cape_armed_once = true;
+                    _cape_waiting_for_takeoff = true;
                 }
             }
         }
 
-        if(armed_once && waiting_for_takeoff) {
+        if(_cape_armed_once && _cape_waiting_for_takeoff) {
             if(inertial_nav.position_ok()) {
                 if(fabsf(_cape_prev_nav_cmd.content.location.alt - inertial_nav.get_altitude()) < 100.f) {
                     set_mode(AUTO);
-                    waiting_for_takeoff = false;
+                    _cape_waiting_for_takeoff = false;
                 }
             }
         }
 
-        if(armed_once && !waiting_for_takeoff) {
+        if(_cape_armed_once && !_cape_waiting_for_takeoff) {
             Cape_UpdateFollowPosition();
             Cape_SetROI();
         }
