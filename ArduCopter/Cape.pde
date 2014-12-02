@@ -1,7 +1,10 @@
 /// -*- tab-width: 4; Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil -*-
 
-// Format: ["CAPE", longitude (int32_t), latitude (int32_t), altitude (float), checksum (uint16_t)]
-#define CAPE_MESSAGE_LENGTH 18            // (4 + sizeof(int32_t) + sizeof(int32_t) + sizeof(float) + sizeof(uint16_t))
+// Format: ["CAPE", longitude (int32_t), latitude (int32_t), altitude (float), arm (uint8_t), misc (uint8_t), checksum (uint16_t)]
+#define CAPE_MESSAGE_LENGTH 20            // (4 + sizeof(int32_t) + sizeof(int32_t) + sizeof(float) + sizeof(uint8_t) + sizeof(uint8_t) + sizeof(uint16_t))
+#define CAPE_MESSAGE_CHKSUM_POS (CAPE_MESSAGE_LENGTH - 2)
+#define CAPE_MESSAGE_ARM_ARM 0xaa
+#define CAPE_MESSAGE_ARM_DISARM 0x55
 static uint8_t _cape_rx_buffer[CAPE_MESSAGE_LENGTH];
 static uint8_t _cape_prefix[] = "CAPE";
 static uint8_t _cape_bytes_received = 0;
@@ -9,6 +12,8 @@ static uint8_t _cape_bytes_received = 0;
 static int32_t _cape_wearable_longitude;
 static int32_t _cape_wearable_latitude;
 static float _cape_wearable_altitude;
+static bool _cape_wearable_arm;
+static uint8_t _cape_wearable_misc;
 
 #define CAPE_RAIL_DISTANCE_THRESHOLD 1000.f // Distance in cm
 
@@ -98,8 +103,8 @@ int Cape_ValidateMessage(uint8_t byte) {
     // Check for complete message
     int valid_message = 0;
     if(_cape_bytes_received == CAPE_MESSAGE_LENGTH) {
-        uint16_t rx_checksum = *(uint16_t*)(&(_cape_rx_buffer[16]));
-        *(uint16_t*)(&(_cape_rx_buffer[16])) = 0;
+        uint16_t rx_checksum = *(uint16_t*)(&(_cape_rx_buffer[CAPE_MESSAGE_CHKSUM_POS]));
+        *(uint16_t*)(&(_cape_rx_buffer[CAPE_MESSAGE_CHKSUM_POS])) = 0;
 
         if(rx_checksum == crc_calculate(_cape_rx_buffer, CAPE_MESSAGE_LENGTH)) {
             // Valid message
@@ -108,6 +113,13 @@ int Cape_ValidateMessage(uint8_t byte) {
             _cape_wearable_longitude = *(int32_t*)(&(_cape_rx_buffer[4]));
             _cape_wearable_latitude = *(int32_t*)(&(_cape_rx_buffer[8]));
             _cape_wearable_altitude = *(float*)(&(_cape_rx_buffer[12]));
+            _cape_wearable_misc = *(uint8_t*)(&(_cape_rx_buffer[17])); // unused
+
+            uint8_t arm_state = *(uint8_t*)(&(_cape_rx_buffer[16]));
+            if(!_cape_wearable_arm && (arm_state == CAPE_MESSAGE_ARM_ARM))
+                _cape_wearable_arm = true;
+            else if(_cape_wearable_arm && (arm_state == CAPE_MESSAGE_ARM_DISARM))
+                _cape_wearable_arm = false;
         }
 
         _cape_bytes_received = 0;
