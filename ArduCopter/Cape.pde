@@ -2,9 +2,13 @@
 
 #define CAPE_UPDATE_INTERVAL 10
 static uint32_t _cape_update_counter = 0;
+static bool _cape_arm_state;
 
-// Format: ["CAPE", longitude (int32_t), latitude (int32_t), altitude (float), checksum (uint16_t)]
-#define CAPE_MESSAGE_LENGTH 18            // (4 + sizeof(int32_t) + sizeof(int32_t) + sizeof(float) + sizeof(uint16_t))
+// Format: ["CAPE", longitude (int32_t), latitude (int32_t), altitude (float), arm (uint8_t), misc (uint8_t), checksum (uint16_t)]
+#define CAPE_MESSAGE_LENGTH 20            // (4 + sizeof(int32_t) + sizeof(int32_t) + sizeof(float) + sizeof(uint8_t) + sizeof(uint8_t) + sizeof(uint16_t))
+#define CAPE_MESSAGE_CHKSUM_POS (CAPE_MESSAGE_LENGTH - 2)
+#define CAPE_MESSAGE_ARM_ARM 0xaa
+#define CAPE_MESSAGE_ARM_DISARM 0x55
 static uint8_t _cape_tx_buffer[CAPE_MESSAGE_LENGTH] = "CAPE";
 
 void Cape_init() {
@@ -15,6 +19,10 @@ void Cape_init() {
 }
 
 void Cape_FastLoop() {
+    // Check and update button state
+
+
+    // Send update to drone
     if(!_cape_update_counter) {
         if( inertial_nav.position_ok() ) {
             // pull position from interial nav library
@@ -25,11 +33,13 @@ void Cape_FastLoop() {
             *(int32_t*)(&(_cape_tx_buffer[4])) = longitude;
             *(int32_t*)(&(_cape_tx_buffer[8])) = latitude;
             *(float*)(&(_cape_tx_buffer[12])) = altitude;
-            *(uint16_t*)(&(_cape_tx_buffer[16])) = 0;
+            *(uint8_t*)(&(_cape_tx_buffer[16])) = _cape_arm_state ? CAPE_MESSAGE_ARM_ARM : CAPE_MESSAGE_ARM_DISARM;
+            *(uint8_t*)(&(_cape_tx_buffer[17])) = 0; // misc, unused
+            *(uint16_t*)(&(_cape_tx_buffer[CAPE_MESSAGE_CHKSUM_POS])) = 0;
 
             uint16_t checksum = crc_calculate(_cape_tx_buffer, CAPE_MESSAGE_LENGTH);
 
-            *(uint16_t*)(&(_cape_tx_buffer[16])) = checksum;
+            *(uint16_t*)(&(_cape_tx_buffer[CAPE_MESSAGE_CHKSUM_POS])) = checksum;
 
             if(hal.uartE) {
                 hal.uartE->write(_cape_tx_buffer, CAPE_MESSAGE_LENGTH);
