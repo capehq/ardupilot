@@ -1,7 +1,15 @@
 /// -*- tab-width: 4; Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil -*-
 
+<<<<<<< HEAD
 // Format: ["CAPE", longitude (int32_t), latitude (int32_t), altitude (float), checksum (uint16_t)]
 #define CAPE_MESSAGE_LENGTH 18            // (4 + sizeof(int32_t) + sizeof(int32_t) + sizeof(float) + sizeof(uint16_t))
+=======
+// Format: ["CAPE", longitude (int32_t), latitude (int32_t), altitude (float), arm (uint8_t), misc (uint8_t), checksum (uint16_t)]
+#define CAPE_MESSAGE_LENGTH 20            // (4 + sizeof(int32_t) + sizeof(int32_t) + sizeof(float) + sizeof(uint8_t) + sizeof(uint8_t) + sizeof(uint16_t))
+#define CAPE_MESSAGE_CHKSUM_POS (CAPE_MESSAGE_LENGTH - 2)
+#define CAPE_MESSAGE_ARM_ARM 0xaa
+#define CAPE_MESSAGE_ARM_DISARM 0x55
+>>>>>>> 6c7d20f556e110e86be72d376fbd379de2b3294b
 static uint8_t _cape_rx_buffer[CAPE_MESSAGE_LENGTH];
 static uint8_t _cape_prefix[] = "CAPE";
 static uint8_t _cape_bytes_received = 0;
@@ -9,12 +17,16 @@ static uint8_t _cape_bytes_received = 0;
 static int32_t _cape_wearable_longitude;
 static int32_t _cape_wearable_latitude;
 static float _cape_wearable_altitude;
+static bool _cape_wearable_arm;
+static uint8_t _cape_wearable_misc;
 
 #define CAPE_RAIL_DISTANCE_THRESHOLD 1000.f // Distance in cm
 
 static AP_Mission::Mission_Command _cape_prev_nav_cmd;
 static AP_Mission::Mission_Command _cape_curr_nav_cmd;
 static bool _cape_nav_cmds_remaining;
+static bool _cape_armed_once = false;
+static bool _cape_waiting_for_takeoff = true;
 
 void Cape_init() {
     // Set up Serial 4
@@ -34,28 +46,50 @@ static bool armed_once = false, waiting_for_takeoff = true;
 void Cape_FastLoop() {
     if(Cape_ReadFromWearable()) {
         // New position received!
+<<<<<<< HEAD
         if(!armed_once) {
+=======
+        if(!_cape_armed_once) {
+>>>>>>> 6c7d20f556e110e86be72d376fbd379de2b3294b
             set_mode(GUIDED);
             pre_arm_checks(true);
             if(ap.pre_arm_check && arm_checks(true)) {
                 if (init_arm_motors()) {
+<<<<<<< HEAD
                     set_auto_armed(true);
                     guided_takeoff_start(_cape_prev_nav_cmd.content.location.alt);
                     armed_once = true;
+=======
+                    guided_takeoff_start(_cape_prev_nav_cmd.content.location.alt);
+                    _cape_armed_once = true;
+                    _cape_waiting_for_takeoff = true;
+>>>>>>> 6c7d20f556e110e86be72d376fbd379de2b3294b
                 }
             }
         }
 
+<<<<<<< HEAD
         if(armed_once && waiting_for_takeoff) {
             if(inertial_nav.position_ok()) {
                 if(fabsf(_cape_prev_nav_cmd.content.location.alt - inertial_nav.get_altitude()) < 100.f) {
                     set_mode(AUTO);
                     waiting_for_takeoff = false;
+=======
+        if(_cape_armed_once && _cape_waiting_for_takeoff) {
+            if(inertial_nav.position_ok()) {
+                if(fabsf(_cape_prev_nav_cmd.content.location.alt - inertial_nav.get_altitude()) < 100.f) {
+                    set_mode(AUTO);
+                    _cape_waiting_for_takeoff = false;
+>>>>>>> 6c7d20f556e110e86be72d376fbd379de2b3294b
                 }
             }
         }
 
+<<<<<<< HEAD
         if(armed_once && !waiting_for_takeoff) {
+=======
+        if(_cape_armed_once && !_cape_waiting_for_takeoff) {
+>>>>>>> 6c7d20f556e110e86be72d376fbd379de2b3294b
             Cape_UpdateFollowPosition();
             Cape_SetROI();
         }
@@ -96,8 +130,8 @@ int Cape_ValidateMessage(uint8_t byte) {
     // Check for complete message
     int valid_message = 0;
     if(_cape_bytes_received == CAPE_MESSAGE_LENGTH) {
-        uint16_t rx_checksum = *(uint16_t*)(&(_cape_rx_buffer[16]));
-        *(uint16_t*)(&(_cape_rx_buffer[16])) = 0;
+        uint16_t rx_checksum = *(uint16_t*)(&(_cape_rx_buffer[CAPE_MESSAGE_CHKSUM_POS]));
+        *(uint16_t*)(&(_cape_rx_buffer[CAPE_MESSAGE_CHKSUM_POS])) = 0;
 
         if(rx_checksum == crc_calculate(_cape_rx_buffer, CAPE_MESSAGE_LENGTH)) {
             // Valid message
@@ -106,6 +140,13 @@ int Cape_ValidateMessage(uint8_t byte) {
             _cape_wearable_longitude = *(int32_t*)(&(_cape_rx_buffer[4]));
             _cape_wearable_latitude = *(int32_t*)(&(_cape_rx_buffer[8]));
             _cape_wearable_altitude = *(float*)(&(_cape_rx_buffer[12]));
+            _cape_wearable_misc = *(uint8_t*)(&(_cape_rx_buffer[17])); // unused
+
+            uint8_t arm_state = *(uint8_t*)(&(_cape_rx_buffer[16]));
+            if(!_cape_wearable_arm && (arm_state == CAPE_MESSAGE_ARM_ARM))
+                _cape_wearable_arm = true;
+            else if(_cape_wearable_arm && (arm_state == CAPE_MESSAGE_ARM_DISARM))
+                _cape_wearable_arm = false;
         }
 
         _cape_bytes_received = 0;
