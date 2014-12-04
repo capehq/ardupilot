@@ -1,25 +1,16 @@
 /// -*- tab-width: 4; Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil -*-
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
->>>>>>> parent of c80f14f... Added ROI, tested functionality in office
-// Format: ["CAPE", longitude (int32_t), latitude (int32_t), altitude (float), checksum (uint16_t)]
-#define CAPE_MESSAGE_LENGTH 18            // (4 + sizeof(int32_t) + sizeof(int32_t) + sizeof(float) + sizeof(uint16_t))
-=======
 // Format: ["CAPE", longitude (int32_t), latitude (int32_t), altitude (float), arm (uint8_t), misc (uint8_t), checksum (uint16_t)]
 #define CAPE_MESSAGE_LENGTH 20            // (4 + sizeof(int32_t) + sizeof(int32_t) + sizeof(float) + sizeof(uint8_t) + sizeof(uint8_t) + sizeof(uint16_t))
 #define CAPE_MESSAGE_CHKSUM_POS (CAPE_MESSAGE_LENGTH - 2)
 #define CAPE_MESSAGE_ARM_ARM 0xaa
 #define CAPE_MESSAGE_ARM_DISARM 0x55
->>>>>>> 6c7d20f556e110e86be72d376fbd379de2b3294b
 static uint8_t _cape_rx_buffer[CAPE_MESSAGE_LENGTH];
 static uint8_t _cape_prefix[] = "CAPE";
 static uint8_t _cape_bytes_received = 0;
 
-static int16_t _cape_wearable_longitude;
-static int16_t _cape_wearable_latitude;
+static int32_t _cape_wearable_longitude;
+static int32_t _cape_wearable_latitude;
 static float _cape_wearable_altitude;
 static bool _cape_wearable_arm;
 static uint8_t _cape_wearable_misc;
@@ -50,58 +41,31 @@ void Cape_init() {
 void Cape_FastLoop() {
     if(Cape_ReadFromWearable()) {
         // New position received!
-<<<<<<< HEAD
-<<<<<<< HEAD
-        if(!armed_once) {
-=======
         if(!_cape_armed_once) {
->>>>>>> 6c7d20f556e110e86be72d376fbd379de2b3294b
             set_mode(GUIDED);
             pre_arm_checks(true);
             if(ap.pre_arm_check && arm_checks(true)) {
                 if (init_arm_motors()) {
-<<<<<<< HEAD
-                    set_auto_armed(true);
-                    guided_takeoff_start(_cape_prev_nav_cmd.content.location.alt);
-                    armed_once = true;
-=======
                     guided_takeoff_start(_cape_prev_nav_cmd.content.location.alt);
                     _cape_armed_once = true;
                     _cape_waiting_for_takeoff = true;
->>>>>>> 6c7d20f556e110e86be72d376fbd379de2b3294b
                 }
             }
         }
 
-<<<<<<< HEAD
-        if(armed_once && waiting_for_takeoff) {
-            if(inertial_nav.position_ok()) {
-                if(fabsf(_cape_prev_nav_cmd.content.location.alt - inertial_nav.get_altitude()) < 100.f) {
-                    set_mode(AUTO);
-                    waiting_for_takeoff = false;
-=======
         if(_cape_armed_once && _cape_waiting_for_takeoff) {
             if(inertial_nav.position_ok()) {
                 if(fabsf(_cape_prev_nav_cmd.content.location.alt - inertial_nav.get_altitude()) < 100.f) {
                     set_mode(AUTO);
                     _cape_waiting_for_takeoff = false;
->>>>>>> 6c7d20f556e110e86be72d376fbd379de2b3294b
                 }
             }
         }
 
-<<<<<<< HEAD
-        if(armed_once && !waiting_for_takeoff) {
-=======
         if(_cape_armed_once && !_cape_waiting_for_takeoff) {
->>>>>>> 6c7d20f556e110e86be72d376fbd379de2b3294b
             Cape_UpdateFollowPosition();
             Cape_SetROI();
         }
-=======
-
-        Cape_UpdateFollowPosition();
->>>>>>> parent of c80f14f... Added ROI, tested functionality in office
 
     }
 }
@@ -205,7 +169,7 @@ void Cape_UpdateFollowPosition() {
     float distance_to_plane = (ww_dlng_f * wp_dlng_f) + (ww_dlat_f * wp_dlat_f) + (ww_dalt_f * wp_dalt_f);
     hal.uartE->printf("Distance %f\n", distance_to_plane);
 
-    if(distance_to_plane <= CAPE_RAIL_DISTANCE_THRESHOLD) {
+    if(fabsf(distance_to_plane) <= CAPE_RAIL_DISTANCE_THRESHOLD) {
         // Move to next waypoint
         _cape_prev_nav_cmd = _cape_curr_nav_cmd;
         _cape_nav_cmds_remaining = mission.get_next_nav_cmd(_cape_prev_nav_cmd.index + 1, _cape_curr_nav_cmd);
@@ -213,6 +177,15 @@ void Cape_UpdateFollowPosition() {
             mission.set_current_cmd(_cape_curr_nav_cmd.index);
         }
     }
+}
+
+void Cape_SetROI() {
+    Location roi_loc;
+    roi_loc.lat = _cape_wearable_latitude;
+    roi_loc.lng = _cape_wearable_longitude;
+    roi_loc.alt = _cape_wearable_altitude;
+    roi_gps_coords=roi_loc; // gabe added. If this doesn't work, maybe assign lat/lng/alt separately
+    set_auto_yaw_roi(roi_loc);
 }
 
 
