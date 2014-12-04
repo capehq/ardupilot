@@ -15,7 +15,7 @@ static float _cape_wearable_altitude;
 static bool _cape_wearable_arm;
 static uint8_t _cape_wearable_misc;
 
-#define CAPE_RAIL_DISTANCE_THRESHOLD 1000.f // Distance in cm
+#define CAPE_RAIL_DISTANCE_THRESHOLD 4000.f // Distance in cm
 
 static AP_Mission::Mission_Command _cape_prev_nav_cmd;
 static AP_Mission::Mission_Command _cape_curr_nav_cmd;
@@ -170,7 +170,7 @@ void Cape_UpdateFollowPosition() {
     float distance_to_plane = (ww_dlng_f * wp_dlng_f) + (ww_dlat_f * wp_dlat_f) + (ww_dalt_f * wp_dalt_f);
     hal.uartE->printf("Distance %f\n", distance_to_plane);
 
-    if(fabsf(distance_to_plane) <= CAPE_RAIL_DISTANCE_THRESHOLD) {
+    if(distance_to_plane <= CAPE_RAIL_DISTANCE_THRESHOLD) {
         // Move to next waypoint
         _cape_prev_nav_cmd = _cape_curr_nav_cmd;
         _cape_nav_cmds_remaining = mission.get_next_nav_cmd(_cape_prev_nav_cmd.index + 1, _cape_curr_nav_cmd);
