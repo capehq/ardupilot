@@ -126,6 +126,14 @@ uint8_t PX4GPIO::read(uint8_t pin) {
             return (relays & PX4IO_P_SETUP_RELAYS_ACC2)?HIGH:LOW;
 #endif
 
+#ifdef GPIO_WEARABLE_BTN
+        case PX4_WEARABLE_BTN: {
+            uint32_t v = 0;
+            ioctl(_gpio_fmu_fd, GPIO_GET, (unsigned long)&v);
+            return (v & GPIO_WEARABLE_BTN)?LOW:HIGH;
+        }
+#endif
+            
     case PX4_GPIO_FMU_SERVO_PIN(0) ... PX4_GPIO_FMU_SERVO_PIN(5): {
         uint32_t v = 0;
         ioctl(_gpio_fmu_fd, GPIO_GET, (unsigned long)&v);
@@ -202,6 +210,12 @@ void PX4GPIO::write(uint8_t pin, uint8_t value)
 #ifdef PX4IO_P_SETUP_RELAYS_ACC2
         case PX4_GPIO_EXT_IO_ACC2_PIN:
             ioctl(_gpio_io_fd, value==LOW?GPIO_CLEAR:GPIO_SET, PX4IO_P_SETUP_RELAYS_ACC2);
+            break;
+#endif
+            
+#ifdef GPIO_WEARABLE_LED
+        case PX4_WEARABLE_LED:
+            ioctl(_gpio_fmu_fd, value==LOW?GPIO_CLEAR:GPIO_SET, GPIO_WEARABLE_LED);
             break;
 #endif
 

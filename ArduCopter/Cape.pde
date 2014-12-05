@@ -2,6 +2,8 @@
 
 #define CAPE_UPDATE_INTERVAL 10
 static uint32_t _cape_update_counter = 0;
+#define CAPE_ARM_DELAY 50 // 500ms delay
+static uint32_t _cape_arm_counter = 0;
 static bool _cape_arm_state;
 
 // Format: ["CAPE", longitude (int32_t), latitude (int32_t), altitude (float), arm (uint8_t), misc (uint8_t), checksum (uint16_t)]
@@ -10,6 +12,9 @@ static bool _cape_arm_state;
 #define CAPE_MESSAGE_ARM_ARM 0xaa
 #define CAPE_MESSAGE_ARM_DISARM 0x55
 static uint8_t _cape_tx_buffer[CAPE_MESSAGE_LENGTH] = "CAPE";
+
+#define PX4_WEARABLE_LED                130
+#define PX4_WEARABLE_BTN                131
 
 void Cape_init() {
     // Set up Serial 4
@@ -20,7 +25,24 @@ void Cape_init() {
 
 void Cape_FastLoop() {
     // Check and update button state
+    if(hal.gpio->read(PX4_WEARABLE_BTN) == HIGH) {
+        if(_cape_arm_counter > CAPE_ARM_DELAY) {
+            // Do nothing
+        }
+        if(_cape_arm_counter == CAPE_ARM_DELAY) {
+            _cape_arm_state = !_cape_arm_state;
+            _cape_arm_counter++;
+        }
+        else
+        {
+            _cape_arm_counter++;
+        }
+    }
+    else {
+        _cape_arm_counter = 0;
+    }
 
+    hal.gpio->write(PX4_WEARABLE_LED, _cape_arm_state ? HIGH : LOW);
 
     // Send update to drone
     if(!_cape_update_counter) {

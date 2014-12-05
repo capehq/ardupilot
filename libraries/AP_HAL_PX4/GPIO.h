@@ -13,6 +13,9 @@
 #define PX4_GPIO_EXT_IO_ACC1_PIN        115
 #define PX4_GPIO_EXT_IO_ACC2_PIN        116
 
+#define PX4_WEARABLE_LED                130
+#define PX4_WEARABLE_BTN                131
+
 /*
   start servo channels used as GPIO at 50. Pin 50 is
   the first FMU servo pin
