@@ -15,7 +15,7 @@ static float _cape_wearable_altitude;
 static bool _cape_wearable_arm;
 static uint8_t _cape_wearable_misc;
 
-#define CAPE_RAIL_DISTANCE_THRESHOLD 4000.f // Distance in cm
+#define CAPE_RAIL_DISTANCE_THRESHOLD 2000.f // Distance in cm
 
 static AP_Mission::Mission_Command _cape_prev_nav_cmd;
 static AP_Mission::Mission_Command _cape_curr_nav_cmd;
