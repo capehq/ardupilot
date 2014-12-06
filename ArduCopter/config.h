@@ -305,6 +305,11 @@
  # define GPS_HDOP_GOOD_DEFAULT         200     // minimum hdop that represents a good position.  used during pre-arm checks if fence is enabled
 #endif
 
+// Rail distance threshold
+#ifndef RAIL_DIST_THRESH_DEFAULT
+ # define RAIL_DIST_THRESH_DEFAULT      3000     // default distance of 30m
+#endif
+
 // GCS failsafe
 #ifndef FS_GCS
  # define FS_GCS                        DISABLED
