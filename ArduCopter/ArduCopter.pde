@@ -498,6 +498,7 @@ static int32_t home_distance;
 static uint32_t wp_distance;
 static uint32_t wp_distance2=0; // gabe added. Different way of calculating the distance kinda
 static uint8_t land_state;              // records state of land (flying to location, descending)
+static float distance_to_plane=0;
 
 static struct Location roi_gps_coords; // gabe added...initializes to 0,0,0 I believe
 // roi_gps_coords=gps.location();

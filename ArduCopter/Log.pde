@@ -460,7 +460,7 @@ struct PACKED log_Cust {
     uint32_t time_ms;
     uint8_t c_mode;
     int16_t  battery_voltage;
-    uint32_t wp_dist;
+    // uint32_t wp_dist;
     uint32_t wp_dist2;
     int32_t roiX;
     int32_t roiY;
@@ -471,6 +471,7 @@ struct PACKED log_Cust {
     int32_t  IN_altitude;
     uint32_t rtl_state_log;
     float    b_current_total;
+    float dist_to_plane;
     // uint32_t gps_week_ms;
 };
 
@@ -525,7 +526,7 @@ static void Log_Write_Custom(uint8_t mode, const Location &current_loc, const Lo
         time_ms         : hal.scheduler->millis(),
         c_mode          : mode,
         battery_voltage : (int16_t) (battery.voltage() * 100.0f),
-        wp_dist         : wp_distance,
+        // wp_dist         : wp_distance,
         wp_dist2        : wp_distance2,
         // roiX            : roi_WP[0],
         // roiY            : roi_WP[1],
@@ -539,6 +540,7 @@ static void Log_Write_Custom(uint8_t mode, const Location &current_loc, const Lo
         IN_altitude     : current_loc.alt,
         rtl_state_log   : rtl_state_int,
         b_current_total : battery.current_total_mah(),
+        dist_to_plane   : distance_to_plane,
         // gps_week_ms     : gps.time_week_ms(0),
     };
     DataFlash.WriteBlock(&pkt, sizeof(pkt));    
@@ -764,7 +766,7 @@ static const struct LogStructure log_structure[] PROGMEM = {
     { LOG_PERFORMANCE_MSG, sizeof(log_Performance), 
       "PM",  "HHIhBHB",    "NLon,NLoop,MaxT,PMT,I2CErr,INSErr,INAVErr" },
     { LOG_CUST_MSG, sizeof(log_Cust),       // note, gps stuff removed for ease of viewing logs for now
-      "CUST", "IMhIILLeeLLeIf",      "tMS,CM,Volt,WpD,WpD2,roiX,roiY,roiZ,BarAlt,lat,lon,inAlt,RS,ct" },
+      "CUST", "IMhIILLeeLLeIff",      "tMS,CM,Volt,WpD2,roiX,roiY,roiZ,BarAlt,lat,lon,inAlt,RS,ct,DtP" },
     { LOG_ATTITUDE_MSG, sizeof(log_Attitude),       
       "ATT", "IccccCCCC",    "TimeMS,DesRoll,Roll,DesPitch,Pitch,DesYaw,Yaw,ErrRP,ErrYaw" },
     { LOG_MODE_MSG, sizeof(log_Mode),

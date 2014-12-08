@@ -167,7 +167,7 @@ void Cape_UpdateFollowPosition() {
     float ww_dalt_f = _cape_curr_nav_cmd.content.location.alt - _cape_wearable_altitude;
 
     // Dot product of norm(waypoint to prev waypoint) and (waypoint to wearable)
-    float distance_to_plane = (ww_dlng_f * wp_dlng_f) + (ww_dlat_f * wp_dlat_f) + (ww_dalt_f * wp_dalt_f);
+    distance_to_plane = (ww_dlng_f * wp_dlng_f) + (ww_dlat_f * wp_dlat_f) + (ww_dalt_f * wp_dalt_f);
     hal.uartE->printf("Distance %f\n", distance_to_plane);
 
     if(distance_to_plane <= g.rail_distance_threshold) {
