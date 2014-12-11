@@ -44,7 +44,7 @@ void Cape_FastLoop() {
         if(!_cape_armed_once) {
             set_mode(GUIDED);
             pre_arm_checks(true);
-            if(ap.pre_arm_check && arm_checks(true)) {
+            if(ap.pre_arm_check && arm_checks(true) && _cape_wearable_arm) {
                 if (init_arm_motors()) {
                     set_auto_armed(true);
                     guided_takeoff_start(_cape_prev_nav_cmd.content.location.alt);
