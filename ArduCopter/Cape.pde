@@ -45,7 +45,7 @@ void Cape_FastLoop() {
     hal.gpio->write(PX4_WEARABLE_LED, _cape_arm_state ? HIGH : LOW);
 
     // Send update to drone
-    if(!_cape_update_counter) {
+    if(_cape_update_counter <= 0) {
         if( inertial_nav.position_ok() ) {
             // pull position from interial nav library
             int32_t longitude = inertial_nav.get_longitude();
