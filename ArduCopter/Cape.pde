@@ -26,7 +26,7 @@ static bool _cape_waiting_for_takeoff = true;
 void Cape_init() {
     // Set up Serial 4
     if(hal.uartE) {
-        hal.uartE->begin(9600, 32, 32);
+        hal.uartE->begin(57600, 32, 32);
         hal.uartE->printf("There are %d commands\n", mission.num_commands());
     }
 
@@ -44,7 +44,7 @@ void Cape_FastLoop() {
         if(!_cape_armed_once) {
             set_mode(GUIDED);
             pre_arm_checks(true);
-            if(ap.pre_arm_check && arm_checks(true) && _cape_wearable_arm) {
+            if(ap.pre_arm_check && arm_checks(true) ) { // && _cape_wearable_arm) {
                 if (init_arm_motors()) {
                     set_auto_armed(true);
                     guided_takeoff_start(_cape_prev_nav_cmd.content.location.alt);
