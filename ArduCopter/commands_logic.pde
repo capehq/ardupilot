@@ -153,16 +153,6 @@ static bool start_command(const AP_Mission::Mission_Command& cmd)
         break;
 #endif
 
-#if MOUNT == ENABLED
-    case MAV_CMD_DO_MOUNT_CONFIGURE:                    // Mission command to configure a camera mount |Mount operation mode (see MAV_CONFIGURE_MOUNT_MODE enum)| stabilize roll? (1 = yes, 0 = no)| stabilize pitch? (1 = yes, 0 = no)| stabilize yaw? (1 = yes, 0 = no)| Empty| Empty| Empty|
-        camera_mount.configure_cmd();
-        break;
-
-    case MAV_CMD_DO_MOUNT_CONTROL:                      // Mission command to control a camera mount |pitch(deg*100) or lat, depending on mount mode.| roll(deg*100) or lon depending on mount mode| yaw(deg*100) or alt (in cm) depending on mount mode| Empty| Empty| Empty| Empty|
-        camera_mount.control_cmd();
-        break;
-#endif
-
 #if PARACHUTE == ENABLED
     case MAV_CMD_DO_PARACHUTE:                          // Mission command to configure or release parachute
         do_parachute(cmd);
@@ -875,6 +865,8 @@ static bool do_guided(const AP_Mission::Mission_Command& cmd)
         case MAV_CMD_NAV_WAYPOINT:
             // set wp_nav's destination
             pos_or_vel = pv_location_to_vector(cmd.content.location);
+            // Location next_wp_location = cmd.content.location; // gabe added
+            wp_distance2 = get_distance(current_loc,cmd.content.location); // gabe added
             guided_set_destination(pos_or_vel);
             return true;
             break;
@@ -925,7 +917,10 @@ static void do_take_picture()
 {
 #if CAMERA == ENABLED
     camera.trigger_pic();
+<<<<<<< HEAD
     gcs_send_message(MSG_CAMERA_FEEDBACK);
+=======
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
     if (should_log(MASK_LOG_CAMERA)) {
         DataFlash.Log_Write_Camera(ahrs, gps, current_loc);
     }

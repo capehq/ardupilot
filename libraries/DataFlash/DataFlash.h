@@ -406,7 +406,10 @@ struct PACKED log_Ubx1 {
     uint16_t noisePerMS;
     uint8_t  jamInd;
     uint8_t  aPower;
+<<<<<<< HEAD
     uint16_t agcCnt;
+=======
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
 };
 
 struct PACKED log_Ubx2 {
@@ -469,7 +472,11 @@ struct PACKED log_Ubx2 {
     { LOG_TERRAIN_MSG, sizeof(log_TERRAIN), \
       "TERR","IBLLHffHH","TimeMS,Status,Lat,Lng,Spacing,TerrH,CHeight,Pending,Loaded" }, \
     { LOG_UBX1_MSG, sizeof(log_Ubx1), \
+<<<<<<< HEAD
       "UBX1", "IBHBBH",  "TimeMS,Instance,noisePerMS,jamInd,aPower,agcCnt" }, \
+=======
+      "UBX1", "IBHBB",  "TimeMS,Instance,noisePerMS,jamInd,aPower" }, \
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
     { LOG_UBX2_MSG, sizeof(log_Ubx2), \
       "UBX2", "IBbBbB", "TimeMS,Instance,ofsI,magI,ofsQ,magQ" }
 

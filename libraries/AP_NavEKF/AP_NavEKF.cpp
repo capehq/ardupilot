@@ -369,6 +369,12 @@ bool NavEKF::healthy(void) const
     if (state.velocity.is_nan()) {
         return false;
     }
+<<<<<<< HEAD
+=======
+    if (filterDiverged || (imuSampleTime_ms - lastDivergeTime_ms < 10000)) {
+        return false;
+    }
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
     // If measurements have failed innovation consistency checks for long enough to time-out
     // and force fusion then the nav solution can be conidered to be unhealthy
     // This will only be set as a transient
@@ -819,6 +825,7 @@ void NavEKF::SelectTasFusion()
 // it requires a stable wind for best results and should not be used for aerobatic flight with manoeuvres that induce large sidslip angles (eg knife-edge, spins, etc)
 void NavEKF::SelectBetaFusion()
 {
+<<<<<<< HEAD
     // set to true if fusion is locked out due to magnetometer fusion on the same time step (done for load levelling)
     bool f_lockedOut = (magFusePerformed && !fuseMeNow);
     // set true when the fusion time interval has triggered
@@ -829,6 +836,16 @@ void NavEKF::SelectBetaFusion()
     bool f_feasible = (assume_zero_sideslip() && !inhibitWindStates);
     // use synthetic sideslip fusion if feasible, required, enough time has lapsed since the last fusion and it is not locked out
     if (f_feasible && f_required && f_timeTrigger && !f_lockedOut) {
+=======
+    // Determine if synthetic sidelsip data should be fused
+    // synthetic sidelip fusion only works for fixed wing aircraft and relies on the average sideslip being close to zero
+    // it requires a stable wind estimate for best results and should not be used for aerobatic flight
+    // we fuse synthetic sideslip measurements if:
+    // we are a fly forward vehicle type AND NOT using a full range of sensors with healthy position
+    // AND NOT on the ground AND enough time has lapsed since our last fusion
+    // AND (we have not fused magnetometer data on this time step OR the immediate fusion flag is set)
+    if (assume_zero_sideslip() && !(use_compass() && useAirspeed() && posHealth) && !inhibitWindStates  && ((imuSampleTime_ms - BETAmsecPrev) >= _msecBetaAvg) && (!magFusePerformed || fuseMeNow)) {
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
         FuseSideslip();
         BETAmsecPrev = imuSampleTime_ms;
     }
@@ -2779,7 +2796,11 @@ void NavEKF::quat2Tbn(Matrix3f &Tbn, const Quaternion &quat) const
 // return the Euler roll, pitch and yaw angle in radians
 void NavEKF::getEulerAngles(Vector3f &euler) const
 {
+<<<<<<< HEAD
     state.quat.to_euler(euler.x, euler.y, euler.z);
+=======
+    state.quat.to_euler(&euler.x, &euler.y, &euler.z);
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
     euler = euler - _ahrs->get_trim();
 }
 
@@ -2831,8 +2852,13 @@ void NavEKF::getAccelZBias(float &zbias1, float &zbias2) const {
         zbias1 = 0;
         zbias2 = 0;
     } else {
+<<<<<<< HEAD
         zbias1 = state.accel_zbias1 / dtIMU;
         zbias2 = state.accel_zbias2 / dtIMU;
+=======
+        accelBias.y = state.accel_zbias2 / dtIMU;
+        accelBias.z = state.accel_zbias1 / dtIMU;
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
     }
 }
 
@@ -2964,6 +2990,18 @@ void NavEKF::ForceSymmetry()
     {
         for (uint8_t j=0; j<=i-1; j++)
         {
+<<<<<<< HEAD
+=======
+            if (fabsf(P[i][j]) > EKF_COVARIENCE_MAX ||
+                fabsf(P[j][i]) > EKF_COVARIENCE_MAX) {
+                // set the filter status as diverged and re-initialise the filter
+                filterDiverged = true;
+                faultStatus.diverged = true;
+                lastDivergeTime_ms = imuSampleTime_ms;
+                InitialiseFilterDynamic();
+                return;
+            }
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
             float temp = 0.5f*(P[i][j] + P[j][i]);
             P[i][j] = temp;
             P[j][i] = temp;
@@ -3251,7 +3289,11 @@ void NavEKF::alignYawGPS()
         float newYaw;
         float yawErr;
         // get quaternion from existing filter states and calculate roll, pitch and yaw angles
+<<<<<<< HEAD
         state.quat.to_euler(roll, pitch, oldYaw);
+=======
+        state.quat.to_euler(&roll, &pitch, &oldYaw);
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
         // calculate yaw angle from GPS velocity
         newYaw = atan2f(velNED[1],velNED[0]);
         // modify yaw angle using GPS ground course if more than 45 degrees away or if not previously aligned
@@ -3353,6 +3395,10 @@ void NavEKF::ZeroVariables()
     // initialise time stamps
     imuSampleTime_ms = hal.scheduler->millis();
     lastHealthyMagTime_ms = imuSampleTime_ms;
+<<<<<<< HEAD
+=======
+    lastDivergeTime_ms = imuSampleTime_ms;
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
     TASmsecPrev = imuSampleTime_ms;
     BETAmsecPrev = imuSampleTime_ms;
     lastMagUpdate = imuSampleTime_ms;
@@ -3451,6 +3497,35 @@ bool NavEKF::assume_zero_sideslip(void) const
     return _ahrs->get_fly_forward() && _ahrs->get_vehicle_class() != AHRS_VEHICLE_GROUND;
 }
 
+<<<<<<< HEAD
+=======
+// Check for filter divergence
+void NavEKF::checkDivergence()
+{
+    // If filter is diverging, then fail for 10 seconds
+    // delay checking to allow bias estimate to settle after reset
+    // filter divergence is detected by looking for rapid changes in gyro bias
+    Vector3f tempVec = state.gyro_bias - lastGyroBias;
+    float tempLength = tempVec.length();
+    if (tempLength != 0.0f) {
+        float temp = constrain_float((P[10][10] + P[11][11] + P[12][12]),1e-12f,1e-8f);
+        scaledDeltaGyrBiasLgth = (5e-8f / temp) * tempVec.length() / dtIMU;
+    }
+    bool divergenceDetected = (scaledDeltaGyrBiasLgth > 1.0f);
+    lastGyroBias = state.gyro_bias;
+    if (imuSampleTime_ms - lastDivergeTime_ms > 10000) {
+        if (divergenceDetected) {
+            filterDiverged = true;
+            faultStatus.diverged = true;
+            lastDivergeTime_ms = imuSampleTime_ms;
+        } else {
+            filterDiverged = false;
+        }
+    }
+
+}
+
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
 /*
 return the filter fault status as a bitmasked integer
  0 = unassigned

@@ -537,7 +537,11 @@ void set_auto_yaw_mode(uint8_t yaw_mode)
     }
 }
 
+<<<<<<< HEAD
 // set_auto_yaw_look_at_heading - sets the yaw look at heading for auto mode
+=======
+// set_auto_yaw_look_at_heading - sets the yaw look at heading for auto mode 
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
 static void set_auto_yaw_look_at_heading(float angle_deg, float turn_rate_dps, int8_t direction, uint8_t relative_angle)
 {
     // get current yaw target

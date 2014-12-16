@@ -897,7 +897,28 @@ void GCS_MAVLINK::handleMessage(mavlink_message_t* msg)
 
     case MAVLINK_MSG_ID_SET_MODE:       // MAV ID: 11
     {
+<<<<<<< HEAD
         handle_set_mode(msg, set_mode);
+=======
+        // decode
+        mavlink_set_mode_t packet;
+        mavlink_msg_set_mode_decode(msg, &packet);
+
+        // exit immediately if this command is not meant for this vehicle
+        if (mavlink_check_target(packet.target_system, 0)) {
+            break;
+        }
+
+        // only accept custom modes because there is no easy mapping from Mavlink flight modes to AC flight modes
+        if (packet.base_mode & MAV_MODE_FLAG_CUSTOM_MODE_ENABLED) {
+            if (set_mode(packet.custom_mode)) {
+                result = MAV_RESULT_ACCEPTED;
+            }
+        }
+
+        // send ACK or NAK
+        mavlink_msg_command_ack_send_buf(msg, chan, MAVLINK_MSG_ID_SET_MODE, result);
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
         break;
     }
 
@@ -1099,8 +1120,10 @@ void GCS_MAVLINK::handleMessage(mavlink_message_t* msg)
             roi_loc.lat = (int32_t)(packet.param5 * 1.0e7f);
             roi_loc.lng = (int32_t)(packet.param6 * 1.0e7f);
             roi_loc.alt = (int32_t)(packet.param7 * 100.0f);
+            roi_gps_coords=roi_loc; // gabe added. If this doesn't work, maybe assign lat/lng/alt separately
             set_auto_yaw_roi(roi_loc);
             result = MAV_RESULT_ACCEPTED;
+            // Log_Write_Custom2(control_mode,current_loc); 
             break;
 
         case MAV_CMD_MISSION_START:
@@ -1158,9 +1181,15 @@ void GCS_MAVLINK::handleMessage(mavlink_message_t* msg)
             if (packet.param1 == 1.0f) {
                 // run pre_arm_checks and arm_checks and display failures
                 pre_arm_checks(true);
+<<<<<<< HEAD
                 if(ap.pre_arm_check && arm_checks(true, true)) {
                     if (init_arm_motors()) {
                         result = MAV_RESULT_ACCEPTED;
+=======
+                if(ap.pre_arm_check && arm_checks(true)) {
+                    if (init_arm_motors()) {
+                    result = MAV_RESULT_ACCEPTED;
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
                     } else {
                         AP_Notify::flags.arming_failed = true;  // init_arm_motors function will reset flag back to false
                         result = MAV_RESULT_UNSUPPORTED;

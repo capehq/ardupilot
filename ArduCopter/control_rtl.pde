@@ -26,12 +26,15 @@ static void rtl_run()
     if (rtl_state_complete) {
         switch (rtl_state) {
         case InitialClimb:
+            // rtl_state_int = 801; // gabe added
             rtl_return_start();
             break;
         case ReturnHome:
+            // rtl_state_int = 802; // gabe added
             rtl_loiterathome_start();
             break;
         case LoiterAtHome:
+            // rtl_state_int = 803; // gabe added
             if (g.rtl_alt_final > 0 && !failsafe.radio) {
                 rtl_descent_start();
             }else{
@@ -39,10 +42,12 @@ static void rtl_run()
             }
             break;
         case FinalDescent:
+            // rtl_state_int = 804; // gabe added
             // do nothing
             break;
         case Land:
             // do nothing - rtl_land_run will take care of disarming motors
+            // rtl_state_int = 805; // gabe added
             break;
         }
     }
@@ -334,7 +339,11 @@ static void rtl_land_run()
 
 #if LAND_REQUIRE_MIN_THROTTLE_TO_DISARM == ENABLED
         // disarm when the landing detector says we've landed and throttle is at minimum
+<<<<<<< HEAD
         if (ap.land_complete && (ap.throttle_zero || failsafe.radio)) {
+=======
+        if (ap.land_complete && (g.rc_3.control_in == 0 || failsafe.radio)) {
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
             init_disarm_motors();
         }
 #else

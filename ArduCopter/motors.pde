@@ -33,7 +33,11 @@ static void arm_motors_check()
         if (arming_counter == ARM_DELAY && !motors.armed()) {
             // run pre-arm-checks and display failures
             pre_arm_checks(true);
+<<<<<<< HEAD
             if(ap.pre_arm_check && arm_checks(true,false)) {
+=======
+            if(ap.pre_arm_check && arm_checks(true)) {
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
                 if (!init_arm_motors()) {
                     // reset arming counter if arming fail
                     arming_counter = 0;
@@ -147,7 +151,11 @@ static bool init_arm_motors()
         startup_ground(true);
         // final check that gyros calibrated successfully
         if (((g.arming_check == ARMING_CHECK_ALL) || (g.arming_check & ARMING_CHECK_INS)) && !ins.gyro_calibrated_ok_all()) {
+<<<<<<< HEAD
             gcs_send_text_P(SEVERITY_HIGH,PSTR("Arm: Gyro calibration failed"));
+=======
+            gcs_send_text_P(SEVERITY_HIGH,PSTR("Arm: Gyro cal failed"));
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
             AP_Notify::flags.armed = false;
             failsafe_enable();
             return false;
@@ -171,6 +179,18 @@ static bool init_arm_motors()
     // set hover throttle
     motors.set_mid_throttle(g.throttle_mid);
 
+<<<<<<< HEAD
+=======
+    // Cancel arming if throttle is raised too high so that copter does not suddenly take off
+    read_radio();
+    if (g.rc_3.control_in > g.throttle_cruise && g.throttle_cruise > 100) {
+        motors.output_min();
+        failsafe_enable();
+        AP_Notify::flags.armed = false;
+        return false;
+    }
+
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
 #if SPRAYER == ENABLED
     // turn off sprayer's test if on
     sprayer.test_pump(false);
@@ -288,7 +308,11 @@ static void pre_arm_checks(bool display_failure)
                 Vector3f vec_diff = mag_vec - prime_mag_vec;
                 if (vec_diff.length() > COMPASS_ACCEPTABLE_VECTOR_DIFF) {
                     if (display_failure) {
+<<<<<<< HEAD
                         gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: inconsistent compasses"));
+=======
+                        gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: compasses inconsistent"));
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
                     }
                     return;
                 }
@@ -326,7 +350,11 @@ static void pre_arm_checks(bool display_failure)
         // check accels are healthy
         if(!ins.get_accel_health_all()) {
             if (display_failure) {
+<<<<<<< HEAD
                 gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: Accelerometers not healthy"));
+=======
+                gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: Accels not healthy"));
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
             }
             return;
         }
@@ -341,7 +369,11 @@ static void pre_arm_checks(bool display_failure)
                 Vector3f vec_diff = accel_vec - prime_accel_vec;
                 if (vec_diff.length() > PREARM_MAX_ACCEL_VECTOR_DIFF) {
                     if (display_failure) {
+<<<<<<< HEAD
                         gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: inconsistent Accelerometers"));
+=======
+                        gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: Accels inconsistent"));
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
                     }
                     return;
                 }
@@ -360,7 +392,11 @@ static void pre_arm_checks(bool display_failure)
         // check gyros calibrated successfully
         if(!ins.gyro_calibrated_ok_all()) {
             if (display_failure) {
+<<<<<<< HEAD
                 gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: Gyro calibration failed"));
+=======
+                gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: Gyro cal failed"));
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
             }
             return;
         }
@@ -373,7 +409,11 @@ static void pre_arm_checks(bool display_failure)
                 Vector3f vec_diff = ins.get_gyro(i) - ins.get_gyro();
                 if (vec_diff.length() > PREARM_MAX_GYRO_VECTOR_DIFF) {
                     if (display_failure) {
+<<<<<<< HEAD
                         gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: inconsistent Gyros"));
+=======
+                        gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: Gyros inconsistent"));
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
                     }
                     return;
                 }

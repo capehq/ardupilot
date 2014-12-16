@@ -40,6 +40,8 @@ static void calc_wp_distance()
         wp_distance = wp_nav.get_loiter_distance_to_target();
     }else if (control_mode == AUTO) {
         wp_distance = wp_nav.get_wp_distance_to_destination();
+    // }else if (control_mode == GUIDED) { // gabe added. Will this break the code and cause a crash?
+    //     wp_distance = wp_nav.get_wp_distance_to_destination();  // gabe added
     }else{
         wp_distance = 0;
     }

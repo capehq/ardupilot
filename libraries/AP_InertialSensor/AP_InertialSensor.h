@@ -125,6 +125,7 @@ public:
     void               set_accel(uint8_t instance, const Vector3f &accel);
 
     // multi-device interface
+<<<<<<< HEAD
     bool get_gyro_health(uint8_t instance) const { return _gyro_healthy[instance]; }
     bool get_gyro_health(void) const { return get_gyro_health(_primary_gyro); }
     bool get_gyro_health_all(void) const;
@@ -136,6 +137,19 @@ public:
     bool get_accel_health(void) const { return get_accel_health(_primary_accel); }
     bool get_accel_health_all(void) const;
     uint8_t get_accel_count(void) const { return _accel_count; };
+=======
+    virtual bool get_gyro_health(uint8_t instance) const { return true; }
+    bool get_gyro_health(void) const { return get_gyro_health(_get_primary_gyro()); }
+    bool get_gyro_health_all(void) const;
+    virtual uint8_t get_gyro_count(void) const { return 1; };
+    bool gyro_calibrated_ok(uint8_t instance) const { return _gyro_cal_ok[instance]; }
+    bool gyro_calibrated_ok_all() const;
+
+    virtual bool get_accel_health(uint8_t instance) const { return true; }
+    bool get_accel_health(void) const { return get_accel_health(get_primary_accel()); }
+    bool get_accel_health_all(void) const;
+    virtual uint8_t get_accel_count(void) const { return 1; };
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
 
     // get accel offsets in m/s/s
     const Vector3f &get_accel_offsets(uint8_t i) const { return _accel_offset[i]; }
@@ -246,6 +260,7 @@ private:
     AP_Int8     _mpu6000_filter;
 
     // board orientation from AHRS
+<<<<<<< HEAD
     enum Rotation _board_orientation;
 
     // calibrated_ok flags
@@ -276,6 +291,12 @@ private:
     // health of gyros and accels
     bool _gyro_healthy[INS_MAX_INSTANCES];
     bool _accel_healthy[INS_MAX_INSTANCES];
+=======
+    enum Rotation			_board_orientation;
+
+    // calibrated_ok flags
+    bool                    _gyro_cal_ok[INS_MAX_INSTANCES];
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
 };
 
 #include "AP_InertialSensor_Backend.h"

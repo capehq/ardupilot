@@ -30,10 +30,14 @@
 // features below are disabled by default on APM (but enabled on Pixhawk)
 //#define AC_RALLY              ENABLED             // disable rally points to save 2k of flash, and also frees rally point EEPROM for more mission commands
 //#define PARACHUTE             ENABLED             // enable parachute release at a cost of 1k of flash
+<<<<<<< HEAD
 //#define EPM_ENABLED           ENABLED             // enable epm cargo gripper costs 500bytes of flash
 //#define CLI_ENABLED           ENABLED             // enable the CLI (command-line-interface) at a cost of 21K of flash space
 //#define NAV_GUIDED            ENABLED             // enable external navigation computer to control vehicle through MAV_CMD_NAV_GUIDED mission commands
 //#define OPTFLOW               ENABLED             // enable optical flow sensor and OF_LOITER flight mode at a cost of 5K of flash space
+=======
+//#define CLI_ENABLED           ENABLED             // enable the CLI (command-line-interface) at a cost of 21K of flash space
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
 
 // features below are disabled by default on all boards
 //#define SPRAYER               ENABLED             // enable the crop sprayer feature (two ESC controlled pumps the speed of which depends upon the vehicle's horizontal velocity)
@@ -48,8 +52,8 @@
 // Put your variable definitions into the UserVariables.h file (or another file name and then change the #define below).
 //#define USERHOOK_VARIABLES "UserVariables.h"
 // Put your custom code into the UserCode.pde with function names matching those listed below and ensure the appropriate #define below is uncommented below
-//#define USERHOOK_INIT userhook_init();                      // for code to be run once at startup
-//#define USERHOOK_FASTLOOP userhook_FastLoop();            // for code to be run at 100hz
+#define USERHOOK_INIT userhook_init();                      // for code to be run once at startup
+#define USERHOOK_FASTLOOP userhook_FastLoop();            // for code to be run at 100hz
 //#define USERHOOK_50HZLOOP userhook_50Hz();                  // for code to be run at 50hz
 //#define USERHOOK_MEDIUMLOOP userhook_MediumLoop();        // for code to be run at 10hz
 //#define USERHOOK_SLOWLOOP userhook_SlowLoop();            // for code to be run at 3.3hz

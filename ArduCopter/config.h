@@ -82,10 +82,20 @@
 #if HAL_CPU_CLASS < HAL_CPU_CLASS_75
  # define PARACHUTE DISABLED
  # define AC_RALLY DISABLED
+<<<<<<< HEAD
  # define EPM_ENABLED DISABLED
  # define CLI_ENABLED           DISABLED
  # define FRSKY_TELEM_ENABLED   DISABLED
  # define NAV_GUIDED            DISABLED
+=======
+ # define CLI_ENABLED           DISABLED
+ # define FRSKY_TELEM_ENABLED   DISABLED
+#endif
+
+// disable sonar on APM1 and TradHeli/APM2
+#if (CONFIG_HAL_BOARD == HAL_BOARD_APM1 || (CONFIG_HAL_BOARD == HAL_BOARD_APM2 && FRAME_CONFIG == HELI_FRAME))
+ # define CONFIG_SONAR          DISABLED
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
 #endif
 
 
@@ -296,6 +306,11 @@
  # define GPS_HDOP_GOOD_DEFAULT         200     // minimum hdop that represents a good position.  used during pre-arm checks if fence is enabled
 #endif
 
+// Rail distance threshold
+#ifndef RAIL_DIST_THRESH_DEFAULT
+ # define RAIL_DIST_THRESH_DEFAULT      3000     // default distance of 30m
+#endif
+
 // GCS failsafe
 #ifndef FS_GCS
  # define FS_GCS                        DISABLED
@@ -321,7 +336,11 @@
 
 // pre-arm baro vs inertial nav max alt disparity
 #ifndef PREARM_MAX_ALT_DISPARITY_CM
+<<<<<<< HEAD
  # define PREARM_MAX_ALT_DISPARITY_CM       100     // barometer and inertial nav altitude must be within this many centimeters
+=======
+ # define PREARM_MAX_ALT_DISPARITY_CM       200     // barometer and inertial nav altitude must be within this many centimeters
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
 #endif
 
 // pre-arm check max velocity

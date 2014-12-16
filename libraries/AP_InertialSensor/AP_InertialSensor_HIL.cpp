@@ -8,6 +8,24 @@ const extern AP_HAL::HAL& hal;
 AP_InertialSensor_HIL::AP_InertialSensor_HIL(AP_InertialSensor &imu) :
     AP_InertialSensor_Backend(imu)
 {
+<<<<<<< HEAD
+=======
+    if (_sample_available()) {
+        return true;
+    }
+    uint32_t start = hal.scheduler->millis();
+    while ((hal.scheduler->millis() - start) < timeout_ms) {
+        uint32_t tnow = hal.scheduler->micros();
+        uint32_t tdelay = (_last_sample_usec + _sample_period_usec) - tnow;
+        if (tdelay < 100000) {
+            hal.scheduler->delay_microseconds(tdelay);
+        }
+        if (_sample_available()) {
+            return true;
+        }
+    }
+    return false;
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
 }
 
 /*

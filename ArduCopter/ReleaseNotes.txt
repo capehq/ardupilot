@@ -1,6 +1,10 @@
 ArduCopter Release Notes:
 ------------------------------------------------------------------
+<<<<<<< HEAD
 ArduCopter 3.2-rc14 31-Oct-2014
+=======
+ArduCopter 3.2 07-Nov2014 / 3.2-rc14 31-Oct-2014
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
 Changes from 3.2-rc13
 1) Safety Features:
     a) fail to arm if second gyro calibration fails (can be disabled with ARMING_CHECK)
@@ -81,7 +85,11 @@ Changes from 3.2-rc6
     d) report health of all accels and gyros (not just primary) to ground station 
 ------------------------------------------------------------------
 ArduCopter 3.2-rc6 31-Aug-2014
+<<<<<<< HEAD
 Changes from 3.2-rc5
+=======
+Changes from 3.2-rc5 
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
 1) Spline twitch when passing through a waypoint largely resolved
 2) THR_DZ param added to allow user configuration of throttle deadzone during AltHold, Loiter, PosHold
 3) Landing check made more strict (climb rate must be -40~40cm/s for 1 full second)

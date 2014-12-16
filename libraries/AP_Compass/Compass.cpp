@@ -211,6 +211,7 @@ const AP_Param::GroupInfo Compass::var_info[] PROGMEM = {
     // @Description: Third compass's device id.  Automatically detected, do not set manually
     // @User: Advanced
     AP_GROUPINFO("DEV_ID3", 17, Compass, _dev_id[2], 0),
+<<<<<<< HEAD
 #endif
 
 #if COMPASS_MAX_INSTANCES > 1
@@ -255,6 +256,8 @@ const AP_Param::GroupInfo Compass::var_info[] PROGMEM = {
     // @Values: 0:Internal,1:External
     // @User: Advanced
     AP_GROUPINFO("EXTERNAL3",23, Compass, _external[2], 0),
+=======
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
 #endif
 
     AP_GROUPEND

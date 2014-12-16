@@ -32,12 +32,15 @@ static void read_barometer(void)
         }
         AP_Notify::flags.baro_glitching = report_baro_glitch;
     }
+<<<<<<< HEAD
 }
 
 #if CONFIG_SONAR == ENABLED
 static void init_sonar(void)
 {
    sonar.init();
+=======
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
 }
 #endif
 

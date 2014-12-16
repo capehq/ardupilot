@@ -1,6 +1,11 @@
 /// -*- tab-width: 4; Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil -*-
 
+<<<<<<< HEAD
 #define THISFIRMWARE "ArduCopter V3.3-dev"
+=======
+#define THISFIRMWARE "ArduCopter V3.2"
+
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
 /*
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -379,7 +384,10 @@ static union {
         uint8_t motor_test          : 1; // 16  // true if we are currently performing the motors test
         uint8_t initialised         : 1; // 17  // true once the init_ardupilot function has completed.  Extended status to GCS is not sent until this completes
         uint8_t land_complete_maybe : 1; // 18  // true if we may have landed (less strict version of land_complete)
+<<<<<<< HEAD
         uint8_t throttle_zero       : 1; // 19  // true if the throttle stick is at zero, debounced
+=======
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
     };
     uint32_t value;
 } ap;
@@ -486,8 +494,15 @@ static int32_t home_bearing;
 static int32_t home_distance;
 // distance between plane and next waypoint in cm.
 static uint32_t wp_distance;
+static uint32_t wp_distance2=0; // gabe added. Different way of calculating the distance kinda
 static uint8_t land_state;              // records state of land (flying to location, descending)
+static float distance_to_plane=0;
 
+static struct Location roi_gps_coords; // gabe added...initializes to 0,0,0 I believe
+// roi_gps_coords=gps.location();
+// roi_gps_coords.lat=0;
+// roi_gps_coords
+// roi_gps_coords
 ////////////////////////////////////////////////////////////////////////////////
 // Auto
 ////////////////////////////////////////////////////////////////////////////////
@@ -503,6 +518,7 @@ static GuidedMode guided_mode;  // controls which controller is run (pos or vel)
 ////////////////////////////////////////////////////////////////////////////////
 RTLState rtl_state;  // records state of rtl (initial climb, returning home, etc)
 bool rtl_state_complete; // set to true if the current state is completed
+static uint32_t rtl_state_int=0; // gabe added (changed to 32 from 8 since would seem to output in fashion as control mode)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Circle
@@ -1091,6 +1107,7 @@ static void ten_hz_logging_loop()
 {
     if (should_log(MASK_LOG_ATTITUDE_MED)) {
         Log_Write_Attitude();
+        // Log_Write_Custom2(control_mode,current_loc); //,gps);
     }
     if (should_log(MASK_LOG_RCIN)) {
         DataFlash.Log_Write_RCIN();
@@ -1115,6 +1132,7 @@ static void fifty_hz_logging_loop()
 #if HIL_MODE == HIL_MODE_DISABLED
     if (should_log(MASK_LOG_ATTITUDE_FAST)) {
         Log_Write_Attitude();
+        // Log_Write_Custom2(control_mode,current_loc); //,gps);
     }
 
     if (should_log(MASK_LOG_IMU)) {
@@ -1151,6 +1169,14 @@ static void one_hz_loop()
         Log_Write_Data(DATA_AP_STATE, ap.value);
     }
 
+<<<<<<< HEAD
+=======
+    // log battery info to the dataflash
+    if (should_log(MASK_LOG_CURRENT)) {
+        Log_Write_Current();
+    }
+
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
     // perform pre-arm checks & display failures every 30 seconds
     static uint8_t pre_arm_display_counter = 15;
     pre_arm_display_counter++;
@@ -1190,6 +1216,33 @@ static void one_hz_loop()
 #endif
 }
 
+<<<<<<< HEAD
+=======
+// called at 100hz but data from sensor only arrives at 20 Hz
+#if OPTFLOW == ENABLED
+static void update_optical_flow(void)
+{
+    static uint32_t last_of_update = 0;
+    static uint8_t of_log_counter = 0;
+
+    // if new data has arrived, process it
+    if( optflow.last_update != last_of_update ) {
+        last_of_update = optflow.last_update;
+        optflow.update_position(ahrs.roll, ahrs.pitch, ahrs.sin_yaw(), ahrs.cos_yaw(), current_loc.alt);      // updates internal lon and lat with estimation based on optical flow
+
+        // write to log at 5hz
+        of_log_counter++;
+        if( of_log_counter >= 4 ) {
+            of_log_counter = 0;
+            if (should_log(MASK_LOG_OPTFLOW)) {
+                Log_Write_Optflow();
+            }
+        }
+    }
+}
+#endif  // OPTFLOW == ENABLED
+
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
 // called at 50hz
 static void update_GPS(void)
 {
@@ -1208,6 +1261,7 @@ static void update_GPS(void)
             // log GPS message
             if (should_log(MASK_LOG_GPS)) {
                 DataFlash.Log_Write_GPS(gps, i, current_loc.alt);
+                Log_Write_Custom(control_mode,current_loc,roi_gps_coords); 
             }
 
             gps_updated = true;

@@ -461,6 +461,26 @@ static void Log_Write_Cmd(const AP_Mission::Mission_Command &cmd)
     DataFlash.Log_Write_MavCmd(mission.num_commands(),mav_cmd);
 }
 
+struct PACKED log_Cust {
+    LOG_PACKET_HEADER;
+    uint32_t time_ms;
+    uint8_t c_mode;
+    int16_t  battery_voltage;
+    uint32_t wp_dist;
+    // uint32_t wp_dist2;
+    int32_t roiX;
+    int32_t roiY;
+    int32_t roiZ;
+    int32_t  bar_alt;
+    int32_t  latitude;
+    int32_t  longitude;
+    int32_t  IN_altitude;
+    uint32_t rtl_state_log;
+    float    b_current_total;
+    float dist_to_plane;
+    // uint32_t gps_week_ms;
+};
+
 struct PACKED log_Attitude {
     LOG_PACKET_HEADER;
     uint32_t time_ms;
@@ -473,6 +493,64 @@ struct PACKED log_Attitude {
     uint16_t error_rp;
     uint16_t error_yaw;
 };
+
+// Writing a custom packet
+static void Log_Write_Custom(uint8_t mode, const Location &current_loc, const Location &roi_gps_coords) //, const AP_GPS &gps)
+{
+    // Vector3f vec = roi_WP.get();
+    // Vector3f vec = roi_WP;
+    // uint32_t exx = roi_WP[100];
+    // Location temp = roi_loc; // doesn't compile, roi_loc is a local variable in GCS_Mavlink.pde
+    // if (rtl_state==InitialClimb) {
+    //     rtl_state_int=1;
+    // } else if (rtl_state==ReturnHome) {
+    //     rtl_state_int=1;
+    // } else if (rtl_state==) {
+    //     rtl_state_int=1;
+    // } else if (rtl_state==) {
+    //     rtl_state_int=1;
+    // }
+    switch (rtl_state) {
+    case InitialClimb:
+        rtl_state_int=1;
+        break;
+    case ReturnHome:
+        rtl_state_int=2;
+        break;
+    case LoiterAtHome:
+        rtl_state_int=3;
+        break;
+    case FinalDescent:
+        rtl_state_int=4;
+        break;
+    case Land:
+        rtl_state_int=5;
+        break;
+    }
+    struct log_Cust pkt = {
+        LOG_PACKET_HEADER_INIT(LOG_CUST_MSG),
+        time_ms         : hal.scheduler->millis(),
+        c_mode          : mode,
+        battery_voltage : (int16_t) (battery.voltage() * 100.0f),
+        wp_dist         : wp_distance,
+        // wp_dist2        : wp_distance2,
+        // roiX            : roi_WP[0],
+        // roiY            : roi_WP[1],
+        // roiZ            : roi_WP[2],
+        roiX            : roi_gps_coords.lat,
+        roiY            : roi_gps_coords.lng,
+        roiZ            : roi_gps_coords.alt,        
+        bar_alt         : baro_alt,
+        latitude        : current_loc.lat,
+        longitude       : current_loc.lng,
+        IN_altitude     : current_loc.alt,
+        rtl_state_log   : rtl_state_int,
+        b_current_total : battery.current_total_mah(),
+        dist_to_plane   : distance_to_plane,
+        // gps_week_ms     : gps.time_week_ms(0),
+    };
+    DataFlash.WriteBlock(&pkt, sizeof(pkt));    
+}
 
 // Write an attitude packet
 static void Log_Write_Attitude()
@@ -693,6 +771,8 @@ static const struct LogStructure log_structure[] PROGMEM = {
 #endif
     { LOG_PERFORMANCE_MSG, sizeof(log_Performance), 
       "PM",  "HHIhBHB",    "NLon,NLoop,MaxT,PMT,I2CErr,INSErr,INAVErr" },
+    { LOG_CUST_MSG, sizeof(log_Cust),       // note, gps stuff removed for ease of viewing logs for now
+      "CUST", "IMhIILLeeLLeIff",      "tMS,CM,Volt,WpD,roiX,roiY,roiZ,BarAlt,lat,lon,inAlt,RS,ct,DtP" },
     { LOG_ATTITUDE_MSG, sizeof(log_Attitude),       
       "ATT", "IccccCCCC",    "TimeMS,DesRoll,Roll,DesPitch,Pitch,DesYaw,Yaw,ErrRP,ErrYaw" },
     { LOG_MODE_MSG, sizeof(log_Mode),
@@ -773,6 +853,7 @@ static void Log_Write_AutoTuneDetails(int16_t angle_cd, float rate_cds) {}
 static void Log_Write_Current() {}
 static void Log_Write_Compass() {}
 static void Log_Write_Attitude() {}
+static void Log_Write_Custom(uint8_t mode, const Location &current_loc, const Location &roi_gps_coords) {} //,const AP_GPS &gps) {}
 static void Log_Write_Data(uint8_t id, int16_t value){}
 static void Log_Write_Data(uint8_t id, uint16_t value){}
 static void Log_Write_Data(uint8_t id, int32_t value){}

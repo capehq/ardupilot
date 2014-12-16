@@ -304,6 +304,7 @@ AP_InertialSensor::init( Start_style style,
     _have_sample = false;
 }
 
+<<<<<<< HEAD
 /*
   try to load a backend
  */
@@ -340,6 +341,12 @@ AP_InertialSensor::_detect_backends(void)
 #else
     #error Unrecognised HAL_INS_TYPE setting
 #endif
+=======
+void
+AP_InertialSensor::init_accel()
+{
+    _init_accel();
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
 
 #if 0 // disabled due to broken hardware on some PXF capes
 #if CONFIG_HAL_BOARD_SUBTYPE == HAL_BOARD_SUBTYPE_LINUX_PXF
@@ -358,6 +365,7 @@ AP_InertialSensor::_detect_backends(void)
     _product_id.set(_backends[0]->product_id());
 }
 
+<<<<<<< HEAD
 void
 AP_InertialSensor::init_accel()
 {
@@ -378,6 +386,19 @@ bool AP_InertialSensor::calibrate_accel(AP_InertialSensor_UserInteract* interact
                                         float &trim_roll,
                                         float &trim_pitch)
 {
+=======
+#if !defined( __AVR_ATmega1280__ )
+// calibrate_accel - perform accelerometer calibration including providing user
+// instructions and feedback Gauss-Newton accel calibration routines borrowed
+// from Rolfe Schmidt blog post describing the method:
+// http://chionophilous.wordpress.com/2011/10/24/accelerometer-calibration-iv-1-implementing-gauss-newton-on-an-atmega/
+// original sketch available at
+// http://rolfeschmidt.com/mathtools/skimetrics/adxl_gn_calibration.pde
+bool AP_InertialSensor::calibrate_accel(AP_InertialSensor_UserInteract* interact,
+                                        float &trim_roll,
+                                        float &trim_pitch)
+{
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
     uint8_t num_accels = min(get_accel_count(), INS_MAX_INSTANCES);
     Vector3f samples[INS_MAX_INSTANCES][6];
     Vector3f new_offsets[INS_MAX_INSTANCES];
@@ -440,7 +461,14 @@ bool AP_InertialSensor::calibrate_accel(AP_InertialSensor_UserInteract* interact
         }
         uint8_t num_samples = 0;
         while (num_samples < 32) {
+<<<<<<< HEAD
             wait_for_sample();
+=======
+            if (!wait_for_sample(1000)) {
+                interact->printf_P(PSTR("Failed to get INS sample\n"));
+                goto failed;
+            }
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
             // read samples from ins
             update();
             // capture sample
@@ -482,6 +510,7 @@ bool AP_InertialSensor::calibrate_accel(AP_InertialSensor_UserInteract* interact
         _calculate_trim(samples[0][0], trim_roll, trim_pitch);
 
         return true;
+<<<<<<< HEAD
     }
 
 failed:
@@ -491,6 +520,17 @@ failed:
         _accel_offset[k].set(orig_offset[k]);
         _accel_scale[k].set(orig_scale[k]);
     }
+=======
+    }
+
+failed:
+    interact->printf_P(PSTR("Calibration FAILED\n"));
+    // restore original scaling and offsets
+    for (uint8_t k=0; k<num_accels; k++) {
+        _accel_offset[k].set(orig_offset[k]);
+        _accel_scale[k].set(orig_scale[k]);
+    }
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
     return false;
 }
 #endif
@@ -513,9 +553,47 @@ void
 AP_InertialSensor::init_gyro()
 {
     _init_gyro();
+<<<<<<< HEAD
 
     // save calibration
     _save_parameters();
+}
+
+// get_gyro_health_all - return true if all gyros are healthy
+bool AP_InertialSensor::get_gyro_health_all(void) const
+{
+    for (uint8_t i=0; i<get_gyro_count(); i++) {
+        if (!get_gyro_health(i)) {
+            return false;
+        }
+    }
+    // return true if we have at least one gyro
+    return (get_gyro_count() > 0);
+}
+
+// gyro_calibration_ok_all - returns true if all gyros were calibrated successfully
+bool AP_InertialSensor::gyro_calibrated_ok_all() const
+{
+    for (uint8_t i=0; i<get_gyro_count(); i++) {
+        if (!gyro_calibrated_ok(i)) {
+            return false;
+        }
+    }
+    return (get_gyro_count() > 0);
+}
+=======
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
+
+// get_accel_health_all - return true if all accels are healthy
+bool AP_InertialSensor::get_accel_health_all(void) const
+{
+    for (uint8_t i=0; i<get_accel_count(); i++) {
+        if (!get_accel_health(i)) {
+            return false;
+        }
+    }
+    // return true if we have at least one accel
+    return (get_accel_count() > 0);
 }
 
 // get_gyro_health_all - return true if all gyros are healthy
@@ -941,6 +1019,7 @@ void AP_InertialSensor::_save_parameters()
         _gyro_offset[i].save();
     }
 }
+<<<<<<< HEAD
 
 
 /*
@@ -1090,3 +1169,5 @@ void AP_InertialSensor::set_gyro(uint8_t instance, const Vector3f &gyro)
     }
 }
 
+=======
+>>>>>>> 3.2-ben-drone-gabe-adding-stuff
