@@ -163,6 +163,8 @@ static void auto_wp_run()
 
     // process pilot's yaw input
     float target_yaw_rate = 0;
+
+    /*
     if (!failsafe.radio) {
         // get pilot's desired yaw rate
         target_yaw_rate = get_pilot_desired_yaw_rate(g.rc_4.control_in);
@@ -170,6 +172,7 @@ static void auto_wp_run()
             set_auto_yaw_mode(AUTO_YAW_HOLD);
         }
     }
+    */ //don't handle transmitter yaw commands
 
     // run waypoint controller
     wp_nav.update_wpnav();
@@ -219,6 +222,7 @@ static void auto_spline_run()
         return;
     }
 
+    /*
     // process pilot's yaw input
     float target_yaw_rate = 0;
     if (!failsafe.radio) {
@@ -228,6 +232,7 @@ static void auto_spline_run()
             set_auto_yaw_mode(AUTO_YAW_HOLD);
         }
     }
+    */
 
     // run waypoint controller
     wp_nav.update_spline();
@@ -236,13 +241,15 @@ static void auto_spline_run()
     pos_control.update_z_controller();
 
     // call attitude controller
+    /*
     if (auto_yaw_mode == AUTO_YAW_HOLD) {
         // roll & pitch from waypoint controller, yaw rate from pilot
         attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), target_yaw_rate);
     }else{
         // roll, pitch from waypoint controller, yaw heading from auto_heading()
-        attitude_control.angle_ef_roll_pitch_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), get_auto_heading(), true);
-    }
+    */   
+    attitude_control.angle_ef_roll_pitch_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), get_auto_heading(), true);
+    //}
 }
 
 // auto_land_start - initialises controller to implement a landing
