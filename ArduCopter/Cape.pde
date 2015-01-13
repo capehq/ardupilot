@@ -26,7 +26,7 @@ static bool _cape_waiting_for_takeoff = true;
 void Cape_init() {
     // Set up Serial 4
     if(hal.uartE) {
-        hal.uartE->begin(57600, 32, 32);
+        hal.uartE->begin(9600, 32, 32);
         hal.uartE->printf("There are %d commands\n", mission.num_commands());
     }
 
