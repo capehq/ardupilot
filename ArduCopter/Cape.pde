@@ -20,7 +20,7 @@ static uint8_t _cape_tx_buffer[CAPE_MESSAGE_LENGTH] = "CAPE";
 void Cape_init() {
     // Set up Serial 4
     if(hal.uartE) {
-        hal.uartE->begin(57600, 32, 32);
+        hal.uartE->begin(9600, 32, 32);
     }
 }
 
@@ -43,7 +43,7 @@ void Cape_FastLoop() {
         _cape_arm_counter = 0;
     }
 
-    if (!_cape_armed_once) {
+    if (!_cape_armed_once && gps.status() >= AP_GPS::GPS_OK_FIX_3D) {
         set_mode(GUIDED);
         pre_arm_checks(true);
         if(ap.pre_arm_check && arm_checks(true) ) { // && _cape_wearable_arm) {
