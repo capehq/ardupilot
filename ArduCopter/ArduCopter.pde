@@ -931,8 +931,8 @@ void setup()
 
     init_ardupilot();
 
-    init_arm_motors(); // want to arm motors to inialize stuff
-    start_logging(); // logging as soon as the batter of the helmet is plugged in
+    // init_arm_motors(); // want to arm motors to inialize stuff
+    // start_logging(); // logging as soon as the batter of the helmet is plugged in
 
     // initialise the main loop scheduler
     scheduler.init(&scheduler_tasks[0], sizeof(scheduler_tasks)/sizeof(scheduler_tasks[0]));
