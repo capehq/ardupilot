@@ -8,13 +8,15 @@ static void init_barometer(bool full_calibration)
     }else{
         barometer.update_calibration();
     }
+    // reset glitch protection to use new baro alt
+    baro_glitch.reset();
     gcs_send_text_P(SEVERITY_LOW, PSTR("barometer calibration complete"));
 }
 
 // return barometric altitude in centimeters
 static void read_barometer(void)
 {
-    barometer.read();
+    barometer.update();
     if (should_log(MASK_LOG_IMU)) {
         Log_Write_Baro();
     }
@@ -110,9 +112,9 @@ static void init_optflow()
 #endif      // OPTFLOW == ENABLED
 }
 
-// called at 100hz but data from sensor only arrives at 20 Hz
+// called at 200hz
 #if OPTFLOW == ENABLED
-static void update_optflow(void)
+static void update_optical_flow(void)
 {
     static uint32_t last_of_update = 0;
 
@@ -124,10 +126,16 @@ static void update_optflow(void)
     // read from sensor
     optflow.update();
 
-    // write to log if new data has arrived
+    // write to log and send to EKF if new data has arrived
     if (optflow.last_update() != last_of_update) {
         last_of_update = optflow.last_update();
-        if (should_log(MASK_LOG_OPTFLOW)) {
+        uint8_t flowQuality = optflow.quality();
+        Vector2f flowRate = optflow.flowRate();
+        Vector2f bodyRate = optflow.bodyRate();
+        // Use range from a separate range finder if available, not the PX4Flows built in sensor which is ineffective
+        float ground_distance_m = 0.01f*float(sonar_alt);
+        ahrs.writeOptFlowMeas(flowQuality, flowRate, bodyRate, last_of_update, sonar_alt_health, ground_distance_m);
+        if (g.log_bitmask & MASK_LOG_OPTFLOW) {
             Log_Write_Optflow();
         }
     }
@@ -141,7 +149,7 @@ static void read_battery(void)
     battery.read();
 
     // update compass with current value
-    if (battery.monitoring() == AP_BATT_MONITOR_VOLTAGE_AND_CURRENT) {
+    if (battery.has_current()) {
         compass.set_current(battery.current_amps());
     }
 

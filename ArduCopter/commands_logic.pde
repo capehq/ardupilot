@@ -111,7 +111,7 @@ static bool start_command(const AP_Mission::Mission_Command& cmd)
         break;
 
     case MAV_CMD_DO_SET_HOME:             // 179
-        do_set_home(cmd);
+        // unsupported as mission command
         break;
 
     case MAV_CMD_DO_SET_SERVO:
@@ -268,6 +268,8 @@ static bool verify_command(const AP_Mission::Mission_Command& cmd)
 // exit_mission - function that is called once the mission completes
 static void exit_mission()
 {
+    // play a tone
+    AP_Notify::events.mission_complete = 1;
     // if we are not on the ground switch to loiter or land
     if(!ap.land_complete) {
         // try to enter loiter but if that fails land
@@ -316,18 +318,7 @@ static void do_takeoff(const AP_Mission::Mission_Command& cmd)
 static void do_nav_wp(const AP_Mission::Mission_Command& cmd)
 {
     const Vector3f &curr_pos = inertial_nav.get_position();
-    Vector3f local_pos = pv_location_to_vector(cmd.content.location);
-
-    // set target altitude to current altitude if not provided
-    if (cmd.content.location.alt == 0) {
-        local_pos.z = curr_pos.z;
-    }
-
-    // set lat/lon position to current position if not provided
-    if (cmd.content.location.lat == 0 && cmd.content.location.lng == 0) {
-        local_pos.x = curr_pos.x;
-        local_pos.y = curr_pos.y;
-    }
+    const Vector3f local_pos = pv_location_to_vector_with_default(cmd.content.location, curr_pos);
 
     // this will be used to remember the time in millis after we reach or pass the WP.
     loiter_time = 0;
@@ -467,7 +458,8 @@ static void do_loiter_time(const AP_Mission::Mission_Command& cmd)
 // do_spline_wp - initiate move to next waypoint
 static void do_spline_wp(const AP_Mission::Mission_Command& cmd)
 {
-    Vector3f local_pos = pv_location_to_vector(cmd.content.location);
+    const Vector3f& curr_pos = inertial_nav.get_position();
+    Vector3f local_pos = pv_location_to_vector_with_default(cmd.content.location, curr_pos);
 
     // this will be used to remember the time in millis after we reach or pass the WP.
     loiter_time = 0;
@@ -496,10 +488,10 @@ static void do_spline_wp(const AP_Mission::Mission_Command& cmd)
         // if the next nav command is a waypoint set end type to spline or straight
         if (temp_cmd.id == MAV_CMD_NAV_WAYPOINT) {
             seg_end_type = AC_WPNav::SEGMENT_END_STRAIGHT;
-            next_destination = pv_location_to_vector(temp_cmd.content.location);
+            next_destination = pv_location_to_vector_with_default(temp_cmd.content.location, local_pos);
         }else if (temp_cmd.id == MAV_CMD_NAV_SPLINE_WAYPOINT) {
             seg_end_type = AC_WPNav::SEGMENT_END_SPLINE;
-            next_destination = pv_location_to_vector(temp_cmd.content.location);
+            next_destination = pv_location_to_vector_with_default(temp_cmd.content.location, local_pos);
         }
     }
 
@@ -632,6 +624,9 @@ static bool verify_nav_wp(const AP_Mission::Mission_Command& cmd)
         return false;
     }
 
+    // play a tone
+    AP_Notify::events.waypoint_complete = 1;
+
     // start timer if necessary
     if(loiter_time == 0) {
         loiter_time = millis();
@@ -758,29 +753,6 @@ static void do_wait_delay(const AP_Mission::Mission_Command& cmd)
 
 static void do_change_alt(const AP_Mission::Mission_Command& cmd)
 {
-    // adjust target appropriately for each nav mode
-    if (control_mode == AUTO) {
-        switch (auto_mode) {
-        case Auto_TakeOff:
-            // To-Do: adjust waypoint target altitude to new provided altitude
-            break;
-        case Auto_WP:
-        case Auto_Spline:
-            // To-Do; reset origin to current location + stopping distance at new altitude
-            break;
-        case Auto_Land:
-        case Auto_RTL:
-            // ignore altitude
-            break;
-        case Auto_CircleMoveToEdge:
-        case Auto_Circle:
-            // move circle altitude up to target (we will need to store this target in circle class)
-            break;
-        case Auto_NavGuided:
-            // ignore altitude
-            break;
-        }
-    }
     // To-Do: store desired altitude in a variable so that it can be verified later
 }
 

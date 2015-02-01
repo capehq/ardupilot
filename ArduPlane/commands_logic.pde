@@ -12,6 +12,7 @@ static void do_within_distance(const AP_Mission::Mission_Command& cmd);
 static void do_change_alt(const AP_Mission::Mission_Command& cmd);
 static void do_change_speed(const AP_Mission::Mission_Command& cmd);
 static void do_set_home(const AP_Mission::Mission_Command& cmd);
+static void do_continue_and_change_alt(const AP_Mission::Mission_Command& cmd);
 static bool verify_nav_wp(const AP_Mission::Mission_Command& cmd);
 
 
@@ -78,6 +79,10 @@ start_command(const AP_Mission::Mission_Command& cmd)
         set_mode(RTL);
         break;
 
+    case MAV_CMD_NAV_CONTINUE_AND_CHANGE_ALT:
+        do_continue_and_change_alt(cmd);
+        break;
+
     // Conditional commands
 
     case MAV_CMD_CONDITION_DELAY:
@@ -132,6 +137,16 @@ start_command(const AP_Mission::Mission_Command& cmd)
         auto_state.commanded_go_around = false;
         break;
 
+    case MAV_CMD_DO_FENCE_ENABLE:
+#if GEOFENCE_ENABLED == ENABLED
+        if (!geofence_set_enabled((bool) cmd.p1, AUTO_TOGGLED)) {
+            gcs_send_text_fmt(PSTR("Unable to set fence enabled state to %u"), cmd.p1);
+        } else {
+            gcs_send_text_fmt(PSTR("Set fence enabled state to %u"), cmd.p1);
+        }    
+#endif
+        break;
+
 #if CAMERA == ENABLED
     case MAV_CMD_DO_CONTROL_VIDEO:                      // Control on-board camera capturing. |Camera ID (-1 for all)| Transmission: 0: disabled, 1: enabled compressed, 2: enabled raw| Transmission mode: 0: video stream, >0: single images every n seconds (decimal)| Recording: 0: disabled, 1: enabled compressed, 2: enabled raw| Empty| Empty| Empty|
         break;
@@ -161,17 +176,9 @@ start_command(const AP_Mission::Mission_Command& cmd)
                 camera_mount.set_mode_to_default();
             }
         } else {
-            // send the command to the camera mount
-            camera_mount.set_roi_cmd(&cmd.content.location);
+            // set mount's target location
+            camera_mount.set_roi_target(cmd.content.location);
         }
-        break;
-
-    case MAV_CMD_DO_MOUNT_CONFIGURE:                    // Mission command to configure a camera mount |Mount operation mode (see MAV_CONFIGURE_MOUNT_MODE enum)| stabilize roll? (1 = yes, 0 = no)| stabilize pitch? (1 = yes, 0 = no)| stabilize yaw? (1 = yes, 0 = no)| Empty| Empty| Empty|
-        camera_mount.configure_cmd();
-        break;
-
-    case MAV_CMD_DO_MOUNT_CONTROL:                      // Mission command to control a camera mount |pitch(deg*100) or lat, depending on mount mode.| roll(deg*100) or lon depending on mount mode| yaw(deg*100) or alt (in cm) depending on mount mode| Empty| Empty| Empty| Empty|
-        camera_mount.control_cmd();
         break;
 #endif
     }
@@ -212,6 +219,9 @@ static bool verify_command(const AP_Mission::Mission_Command& cmd)        // Ret
     case MAV_CMD_NAV_RETURN_TO_LAUNCH:
         return verify_RTL();
 
+    case MAV_CMD_NAV_CONTINUE_AND_CHANGE_ALT:
+        return verify_continue_and_change_alt();
+
     // Conditional commands
 
     case MAV_CMD_CONDITION_DELAY:
@@ -242,6 +252,7 @@ static bool verify_command(const AP_Mission::Mission_Command& cmd)        // Ret
     case MAV_CMD_DO_MOUNT_CONTROL:
     case MAV_CMD_DO_INVERTED_FLIGHT:
     case MAV_CMD_DO_LAND_START:
+    case MAV_CMD_DO_FENCE_ENABLE:
         return true;
 
     default:
@@ -280,11 +291,12 @@ static void do_RTL(void)
     setup_turn_angle();
 
     if (should_log(MASK_LOG_MODE))
-        Log_Write_Mode(control_mode);
+        DataFlash.Log_Write_Mode(control_mode);
 }
 
 static void do_takeoff(const AP_Mission::Mission_Command& cmd)
 {
+    prev_WP_loc = current_loc;
     set_next_WP(cmd.content.location);
     // pitch in deg, airspeed  m/s, throttle %, track WP 1 or 0
     auto_state.takeoff_pitch_cd        = (int16_t)cmd.p1 * 100;
@@ -340,6 +352,12 @@ static void do_loiter_time(const AP_Mission::Mission_Command& cmd)
     loiter.start_time_ms = 0;
     loiter.time_max_ms = cmd.p1 * (uint32_t)1000;     // units are seconds
     loiter_set_direction_wp(cmd);
+}
+
+static void do_continue_and_change_alt(const AP_Mission::Mission_Command& cmd)
+{
+    next_WP_loc.alt = cmd.content.location.alt + home.alt;
+    reset_offset_altitude();
 }
 
 /********************************************************************************/
@@ -419,7 +437,8 @@ static bool verify_nav_wp(const AP_Mission::Mission_Command& cmd)
     }
 
     // see if the user has specified a maximum distance to waypoint
-    if (g.waypoint_max_radius > 0 && wp_distance > (uint16_t)g.waypoint_max_radius) {
+    if (g.waypoint_max_radius > 0 && 
+        auto_state.wp_distance > (uint16_t)g.waypoint_max_radius) {
         if (location_passed_point(current_loc, prev_WP_loc, next_WP_loc)) {
             // this is needed to ensure completion of the waypoint
             prev_WP_loc = current_loc;
@@ -433,7 +452,7 @@ static bool verify_nav_wp(const AP_Mission::Mission_Command& cmd)
         acceptance_distance = cmd.p1;
     }
     
-    if (wp_distance <= acceptance_distance) {
+    if (auto_state.wp_distance <= acceptance_distance) {
         gcs_send_text_fmt(PSTR("Reached Waypoint #%i dist %um"),
                           (unsigned)mission.get_current_nav_cmd().index,
                           (unsigned)get_distance(current_loc, next_WP_loc));
@@ -487,13 +506,32 @@ static bool verify_loiter_turns()
 static bool verify_RTL()
 {
     update_loiter();
-	if (wp_distance <= (uint32_t)max(g.waypoint_radius,0) || 
+	if (auto_state.wp_distance <= (uint32_t)max(g.waypoint_radius,0) || 
         nav_controller->reached_loiter_target()) {
 			gcs_send_text_P(SEVERITY_LOW,PSTR("Reached home"));
 			return true;
     } else {
         return false;
 	}
+}
+
+static bool verify_continue_and_change_alt()
+{
+    if (abs(adjusted_altitude_cm() - next_WP_loc.alt) <= 500) {
+        return true;
+    }
+   
+    // Is the next_WP less than 200 m away?
+    if (get_distance(current_loc, next_WP_loc) < 200.f) {
+        //push another 300 m down the line
+        int32_t next_wp_bearing_cd = get_bearing_cd(prev_WP_loc, next_WP_loc);
+        location_update(next_WP_loc, next_wp_bearing_cd * 0.01f, 300.f);
+    }
+
+    //keep flying the same course
+    nav_controller->update_waypoint(prev_WP_loc, next_WP_loc);
+
+    return false;
 }
 
 /********************************************************************************/
@@ -520,6 +558,7 @@ static void do_change_alt(const AP_Mission::Mission_Command& cmd)
     change_target_altitude(condition_rate/10);
     next_WP_loc.alt = condition_value;                                      // For future nav calculations
     reset_offset_altitude();
+    setup_glide_slope();
 }
 
 static void do_within_distance(const AP_Mission::Mission_Command& cmd)
@@ -555,7 +594,7 @@ static bool verify_change_alt()
 
 static bool verify_within_distance()
 {
-    if (wp_distance < max(condition_value,0)) {
+    if (auto_state.wp_distance < max(condition_value,0)) {
         condition_value = 0;
         return true;
     }
@@ -613,6 +652,7 @@ static void do_take_picture()
 {
 #if CAMERA == ENABLED
     camera.trigger_pic();
+    gcs_send_message(MSG_CAMERA_FEEDBACK);
     if (should_log(MASK_LOG_CAMERA)) {
         DataFlash.Log_Write_Camera(ahrs, gps, current_loc);
     }

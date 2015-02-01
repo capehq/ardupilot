@@ -33,11 +33,7 @@ static void arm_motors_check()
         if (arming_counter == ARM_DELAY && !motors.armed()) {
             // run pre-arm-checks and display failures
             pre_arm_checks(true);
-<<<<<<< HEAD
             if(ap.pre_arm_check && arm_checks(true,false)) {
-=======
-            if(ap.pre_arm_check && arm_checks(true)) {
->>>>>>> 3.2-ben-drone-gabe-adding-stuff
                 if (!init_arm_motors()) {
                     // reset arming counter if arming fail
                     arming_counter = 0;
@@ -151,11 +147,7 @@ static bool init_arm_motors()
         startup_ground(true);
         // final check that gyros calibrated successfully
         if (((g.arming_check == ARMING_CHECK_ALL) || (g.arming_check & ARMING_CHECK_INS)) && !ins.gyro_calibrated_ok_all()) {
-<<<<<<< HEAD
             gcs_send_text_P(SEVERITY_HIGH,PSTR("Arm: Gyro calibration failed"));
-=======
-            gcs_send_text_P(SEVERITY_HIGH,PSTR("Arm: Gyro cal failed"));
->>>>>>> 3.2-ben-drone-gabe-adding-stuff
             AP_Notify::flags.armed = false;
             failsafe_enable();
             return false;
@@ -179,18 +171,6 @@ static bool init_arm_motors()
     // set hover throttle
     motors.set_mid_throttle(g.throttle_mid);
 
-<<<<<<< HEAD
-=======
-    // Cancel arming if throttle is raised too high so that copter does not suddenly take off
-    read_radio();
-    if (g.rc_3.control_in > g.throttle_cruise && g.throttle_cruise > 100) {
-        motors.output_min();
-        failsafe_enable();
-        AP_Notify::flags.armed = false;
-        return false;
-    }
-
->>>>>>> 3.2-ben-drone-gabe-adding-stuff
 #if SPRAYER == ENABLED
     // turn off sprayer's test if on
     sprayer.test_pump(false);
@@ -209,7 +189,7 @@ static bool init_arm_motors()
     Log_Write_Event(DATA_ARMED);
 
     // log flight mode in case it was changed while vehicle was disarmed
-    Log_Write_Mode(control_mode);
+    DataFlash.Log_Write_Mode(control_mode);
 
     // reenable failsafe
     failsafe_enable();
@@ -221,8 +201,15 @@ static bool init_arm_motors()
 // perform pre-arm checks and set ap.pre_arm_check flag
 static void pre_arm_checks(bool display_failure)
 {
+    // exit immediately if already armed
+    if (motors.armed()) {
+        return;
+    }
+
     // exit immediately if we've already successfully performed the pre-arm check
+    // run gps checks because results may change and affect LED colour
     if (ap.pre_arm_check) {
+        pre_arm_gps_checks(display_failure);
         return;
     }
 
@@ -245,7 +232,7 @@ static void pre_arm_checks(bool display_failure)
     // check Baro
     if ((g.arming_check == ARMING_CHECK_ALL) || (g.arming_check & ARMING_CHECK_BARO)) {
         // barometer health check
-        if(!barometer.healthy()) {
+        if(!barometer.all_healthy()) {
             if (display_failure) {
                 gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: Barometer not healthy"));
             }
@@ -308,11 +295,7 @@ static void pre_arm_checks(bool display_failure)
                 Vector3f vec_diff = mag_vec - prime_mag_vec;
                 if (vec_diff.length() > COMPASS_ACCEPTABLE_VECTOR_DIFF) {
                     if (display_failure) {
-<<<<<<< HEAD
                         gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: inconsistent compasses"));
-=======
-                        gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: compasses inconsistent"));
->>>>>>> 3.2-ben-drone-gabe-adding-stuff
                     }
                     return;
                 }
@@ -323,18 +306,16 @@ static void pre_arm_checks(bool display_failure)
     }
 
     // check GPS
-    if ((g.arming_check == ARMING_CHECK_ALL) || (g.arming_check & ARMING_CHECK_GPS)) {
-        // check gps is ok if required - note this same check is repeated again in arm_checks
-        if ((mode_requires_GPS(control_mode) || g.failsafe_gps_enabled == FS_GPS_LAND_EVEN_STABILIZE) && !pre_arm_gps_checks(display_failure)) {
-            return;
-        }
+    if (!pre_arm_gps_checks(display_failure)) {
+        return;
+    }
 
-#if AC_FENCE == ENABLED
-        // check fence is initialised
-        if(!fence.pre_arm_check() || (((fence.get_enabled_fences() & AC_FENCE_TYPE_CIRCLE) != 0) && !pre_arm_gps_checks(display_failure))) {
-            return;
+    // check fence is initialised
+    if(!fence.pre_arm_check()) {
+        if (display_failure) {
+            gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: check fence"));
         }
-#endif
+        return;
     }
 
     // check INS
@@ -350,11 +331,7 @@ static void pre_arm_checks(bool display_failure)
         // check accels are healthy
         if(!ins.get_accel_health_all()) {
             if (display_failure) {
-<<<<<<< HEAD
                 gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: Accelerometers not healthy"));
-=======
-                gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: Accels not healthy"));
->>>>>>> 3.2-ben-drone-gabe-adding-stuff
             }
             return;
         }
@@ -369,11 +346,7 @@ static void pre_arm_checks(bool display_failure)
                 Vector3f vec_diff = accel_vec - prime_accel_vec;
                 if (vec_diff.length() > PREARM_MAX_ACCEL_VECTOR_DIFF) {
                     if (display_failure) {
-<<<<<<< HEAD
                         gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: inconsistent Accelerometers"));
-=======
-                        gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: Accels inconsistent"));
->>>>>>> 3.2-ben-drone-gabe-adding-stuff
                     }
                     return;
                 }
@@ -389,18 +362,6 @@ static void pre_arm_checks(bool display_failure)
             return;
         }
 
-        // check gyros calibrated successfully
-        if(!ins.gyro_calibrated_ok_all()) {
-            if (display_failure) {
-<<<<<<< HEAD
-                gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: Gyro calibration failed"));
-=======
-                gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: Gyro cal failed"));
->>>>>>> 3.2-ben-drone-gabe-adding-stuff
-            }
-            return;
-        }
-
 #if INS_MAX_INSTANCES > 1
         // check all gyros are consistent
         if (ins.get_gyro_count() > 1) {
@@ -409,11 +370,7 @@ static void pre_arm_checks(bool display_failure)
                 Vector3f vec_diff = ins.get_gyro(i) - ins.get_gyro();
                 if (vec_diff.length() > PREARM_MAX_GYRO_VECTOR_DIFF) {
                     if (display_failure) {
-<<<<<<< HEAD
                         gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: inconsistent Gyros"));
-=======
-                        gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: Gyros inconsistent"));
->>>>>>> 3.2-ben-drone-gabe-adding-stuff
                     }
                     return;
                 }
@@ -514,29 +471,58 @@ static void pre_arm_rc_checks()
 // performs pre_arm gps related checks and returns true if passed
 static bool pre_arm_gps_checks(bool display_failure)
 {
-    float speed_cms = inertial_nav.get_velocity().length();     // speed according to inertial nav in cm/s
+    // return true immediately if gps check is disabled
+    if (!(g.arming_check == ARMING_CHECK_ALL || g.arming_check & ARMING_CHECK_GPS)) {
+        AP_Notify::flags.pre_arm_gps_check = true;
+        return true;
+    }
+
+    // check if flight mode requires GPS
+    bool gps_required = mode_requires_GPS(control_mode);
+
+    // if GPS failsafe will triggers even in stabilize mode we need GPS before arming
+    if (g.failsafe_gps_enabled == FS_GPS_LAND_EVEN_STABILIZE) {
+        gps_required = true;
+    }
+
+#if AC_FENCE == ENABLED
+    // if circular fence is enabled we need GPS
+    if ((fence.get_enabled_fences() & AC_FENCE_TYPE_CIRCLE) != 0) {
+        gps_required = true;
+    }
+#endif
+
+    // return true if GPS is not required
+    if (!gps_required) {
+        AP_Notify::flags.pre_arm_gps_check = true;
+        return true;
+    }
 
     // check GPS is not glitching
     if (gps_glitch.glitching()) {
         if (display_failure) {
             gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: GPS Glitch"));
         }
+        AP_Notify::flags.pre_arm_gps_check = false;
         return false;
     }
 
     // ensure GPS is ok
-    if (!GPS_ok()) {
+    if (!position_ok()) {
         if (display_failure) {
             gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: Need 3D Fix"));
         }
+        AP_Notify::flags.pre_arm_gps_check = false;
         return false;
     }
 
     // check speed is below 50cm/s
+    float speed_cms = inertial_nav.get_velocity().length();     // speed according to inertial nav in cm/s
     if (speed_cms == 0 || speed_cms > PREARM_MAX_VELOCITY_CMS) {
         if (display_failure) {
             gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: Bad Velocity"));
         }
+        AP_Notify::flags.pre_arm_gps_check = false;
         return false;
     }
 
@@ -545,10 +531,12 @@ static bool pre_arm_gps_checks(bool display_failure)
         if (display_failure) {
             gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: High GPS HDOP"));
         }
+        AP_Notify::flags.pre_arm_gps_check = false;
         return false;
     }
 
     // if we got here all must be ok
+    AP_Notify::flags.pre_arm_gps_check = true;
     return true;
 }
 
@@ -606,11 +594,9 @@ static bool arm_checks(bool display_failure, bool arming_from_gcs)
         }
     }
 
-    // check gps is ok if required - note this same check is also done in pre-arm checks
-    if ((g.arming_check == ARMING_CHECK_ALL) || (g.arming_check & ARMING_CHECK_GPS)) {
-        if ((mode_requires_GPS(control_mode) || g.failsafe_gps_enabled == FS_GPS_LAND_EVEN_STABILIZE) && !pre_arm_gps_checks(display_failure)) {
-            return false;
-        }
+    // check gps
+    if (!pre_arm_gps_checks(display_failure)) {
+        return false;
     }
 
     // check parameters

@@ -124,8 +124,10 @@ public:
     const Vector3f     &get_accel(void) const { return get_accel(_primary_accel); }
     void               set_accel(uint8_t instance, const Vector3f &accel);
 
+    uint32_t get_gyro_error_count(uint8_t i) const { return _gyro_error_count[i]; }
+    uint32_t get_accel_error_count(uint8_t i) const { return _accel_error_count[i]; }
+
     // multi-device interface
-<<<<<<< HEAD
     bool get_gyro_health(uint8_t instance) const { return _gyro_healthy[instance]; }
     bool get_gyro_health(void) const { return get_gyro_health(_primary_gyro); }
     bool get_gyro_health_all(void) const;
@@ -137,19 +139,6 @@ public:
     bool get_accel_health(void) const { return get_accel_health(_primary_accel); }
     bool get_accel_health_all(void) const;
     uint8_t get_accel_count(void) const { return _accel_count; };
-=======
-    virtual bool get_gyro_health(uint8_t instance) const { return true; }
-    bool get_gyro_health(void) const { return get_gyro_health(_get_primary_gyro()); }
-    bool get_gyro_health_all(void) const;
-    virtual uint8_t get_gyro_count(void) const { return 1; };
-    bool gyro_calibrated_ok(uint8_t instance) const { return _gyro_cal_ok[instance]; }
-    bool gyro_calibrated_ok_all() const;
-
-    virtual bool get_accel_health(uint8_t instance) const { return true; }
-    bool get_accel_health(void) const { return get_accel_health(get_primary_accel()); }
-    bool get_accel_health_all(void) const;
-    virtual uint8_t get_accel_count(void) const { return 1; };
->>>>>>> 3.2-ben-drone-gabe-adding-stuff
 
     // get accel offsets in m/s/s
     const Vector3f &get_accel_offsets(uint8_t i) const { return _accel_offset[i]; }
@@ -226,6 +215,9 @@ private:
     void _calculate_trim(Vector3f accel_sample, float& trim_roll, float& trim_pitch);
 #endif
 
+    // check if we have 3D accel calibration
+    void check_3D_calibration(void);
+
     // save parameters to eeprom
     void  _save_parameters();
 
@@ -260,7 +252,6 @@ private:
     AP_Int8     _mpu6000_filter;
 
     // board orientation from AHRS
-<<<<<<< HEAD
     enum Rotation _board_orientation;
 
     // calibrated_ok flags
@@ -275,6 +266,9 @@ private:
 
     // are we in HIL mode?
     bool _hil_mode:1;
+
+    // do we have offsets/scaling from a 3D calibration?
+    bool _have_3D_calibration:1;
 
     // the delta time in seconds for the last sample
     float _delta_time;
@@ -291,12 +285,9 @@ private:
     // health of gyros and accels
     bool _gyro_healthy[INS_MAX_INSTANCES];
     bool _accel_healthy[INS_MAX_INSTANCES];
-=======
-    enum Rotation			_board_orientation;
 
-    // calibrated_ok flags
-    bool                    _gyro_cal_ok[INS_MAX_INSTANCES];
->>>>>>> 3.2-ben-drone-gabe-adding-stuff
+    uint32_t _accel_error_count[INS_MAX_INSTANCES];
+    uint32_t _gyro_error_count[INS_MAX_INSTANCES];
 };
 
 #include "AP_InertialSensor_Backend.h"
