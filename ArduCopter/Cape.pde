@@ -46,7 +46,7 @@ void Cape_FastLoop() {
     if (!_cape_armed_once && gps.status() >= AP_GPS::GPS_OK_FIX_3D && _cape_arm_state==true) {
         set_mode(GUIDED);
         pre_arm_checks(true);
-        if(ap.pre_arm_check && arm_checks(true) ) { // && _cape_wearable_arm) {
+        if(ap.pre_arm_check && arm_checks(true) ) {
             if (init_arm_motors()) {
                 set_auto_armed(true);
                 _cape_armed_once=true;
