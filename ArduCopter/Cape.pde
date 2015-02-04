@@ -170,7 +170,8 @@ void Cape_UpdateFollowPosition() {
     distance_to_plane = (ww_dlng_f * wp_dlng_f) + (ww_dlat_f * wp_dlat_f) + (ww_dalt_f * wp_dalt_f);
     hal.uartE->printf("Distance %f\n", distance_to_plane);
 
-    if(distance_to_plane <= g.rail_distance_threshold) {
+    if((distance_to_plane <= g.rail_distance_threshold && _cape_curr_nav_cmd.index>3) || 
+        (distance_to_plane <= 1500 && _cape_curr_nav_cmd.index<=3)) { // temporary shitty code, will fix if it works
         // Move to next waypoint
         _cape_prev_nav_cmd = _cape_curr_nav_cmd;
         _cape_nav_cmds_remaining = mission.get_next_nav_cmd(_cape_prev_nav_cmd.index + 1, _cape_curr_nav_cmd);
