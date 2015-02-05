@@ -65,7 +65,11 @@ void Cape_FastLoop() {
 
         if(_cape_armed_once && !_cape_waiting_for_takeoff) {
             Cape_UpdateFollowPosition();
-            Cape_SetROI();
+            // Cape_SetROI();
+        }
+
+        if (_cape_armed_once) {
+            Cape_SetROI(); // Set ROI soon as we take-off (so we get pitch tracking on take-off too). Does not cause drone to yaw during takeoff
         }
 
     }
