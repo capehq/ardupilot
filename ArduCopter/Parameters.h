@@ -124,7 +124,8 @@ public:
         k_param_optflow,
         k_param_dcmcheck_thresh,        // 59
         k_param_log_bitmask,
-        k_param_rail_distance_threshold, // 61 it seems
+        k_param_rail_distance_threshold, // 61 it seems. gabe added
+        k_param_early_dist_thres, // gabe added
 
         // 65: AP_Limits Library
         k_param_limits = 65,            // deprecated - remove
@@ -355,7 +356,8 @@ public:
     AP_Int16        poshold_brake_rate;         // PosHold flight mode's rotation rate during braking in deg/sec
     AP_Int16        poshold_brake_angle_max;    // PosHold flight mode's max lean angle during braking in centi-degrees
 
-    AP_Int32        rail_distance_threshold;     // Projected distance from the skier that the drone will move to the next wp    
+    AP_Int32        rail_distance_threshold;     // Projected distance from the skier that the drone will move to the next wp   
+    AP_Int32        early_dist_thres;            // Projected distance from the skier that the drone will move to the next wp for the first two WPs
     
     // Waypoints
     //

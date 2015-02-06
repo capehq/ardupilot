@@ -5,6 +5,7 @@
 #define CAPE_MESSAGE_CHKSUM_POS (CAPE_MESSAGE_LENGTH - 2)
 #define CAPE_MESSAGE_ARM_ARM 0xaa
 #define CAPE_MESSAGE_ARM_DISARM 0x55
+#define early_wp_index 3
 static uint8_t _cape_rx_buffer[CAPE_MESSAGE_LENGTH];
 static uint8_t _cape_prefix[] = "CAPE";
 static uint8_t _cape_bytes_received = 0;
@@ -174,8 +175,8 @@ void Cape_UpdateFollowPosition() {
     distance_to_plane = (ww_dlng_f * wp_dlng_f) + (ww_dlat_f * wp_dlat_f) + (ww_dalt_f * wp_dalt_f);
     hal.uartE->printf("Distance %f\n", distance_to_plane);
 
-    if((distance_to_plane <= g.rail_distance_threshold && _cape_curr_nav_cmd.index>3) || 
-        (distance_to_plane <= 1500 && _cape_curr_nav_cmd.index<=3)) { // temporary shitty code, will fix if it works
+    if((distance_to_plane <= g.rail_distance_threshold && _cape_curr_nav_cmd.index>early_wp_index) || 
+        (distance_to_plane <= g.early_dist_thres && _cape_curr_nav_cmd.index<=early_wp_index)) { // temporary shitty code, will fix if it works
         // Move to next waypoint
         _cape_prev_nav_cmd = _cape_curr_nav_cmd;
         _cape_nav_cmds_remaining = mission.get_next_nav_cmd(_cape_prev_nav_cmd.index + 1, _cape_curr_nav_cmd);

@@ -310,6 +310,11 @@
  # define RAIL_DIST_THRESH_DEFAULT      3000     // default distance of 30m
 #endif
 
+// Early rail distance threshold
+#ifndef EARLY_DIST_THRES_DEFAULT
+ # define EARLY_DIST_THRES_DEFAULT      3000     // default distance of 30m
+#endif
+
 // GCS failsafe
 #ifndef FS_GCS
  # define FS_GCS                        DISABLED

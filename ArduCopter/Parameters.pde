@@ -163,6 +163,13 @@ const AP_Param::Info var_info[] PROGMEM = {
     // @User: Advanced
     GSCALAR(rail_distance_threshold, "RAIL_DIST_THRESH", RAIL_DIST_THRESH_DEFAULT),
 
+    // @Param: EARLY_DIST_THRES
+    // @DisplayName: Early Dist Thres
+    // @Description: Projected distance from the skier that the drone will move to the next wp for first few wps   
+    // @Range: -20000 50000
+    // @User: Advanced
+    GSCALAR(early_dist_thres, "EARLY_DIST_THRES", EARLY_DIST_THRES_DEFAULT),
+
     // @Param: MAG_ENABLE
     // @DisplayName: Compass enable/disable
     // @Description: Setting this to Enabled(1) will enable the compass. Setting this to Disabled(0) will disable the compass
