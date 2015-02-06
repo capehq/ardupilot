@@ -5,6 +5,7 @@ static uint32_t _cape_update_counter = 0;
 #define CAPE_ARM_DELAY 50 // 500ms delay
 static uint32_t _cape_arm_counter = 0;
 static bool _cape_arm_state;
+static bool _cape_armed_once=false;
 
 // Format: ["CAPE", longitude (int32_t), latitude (int32_t), altitude (float), arm (uint8_t), misc (uint8_t), checksum (uint16_t)]
 #define CAPE_MESSAGE_LENGTH 20            // (4 + sizeof(int32_t) + sizeof(int32_t) + sizeof(float) + sizeof(uint8_t) + sizeof(uint8_t) + sizeof(uint16_t))
@@ -42,11 +43,23 @@ void Cape_FastLoop() {
         _cape_arm_counter = 0;
     }
 
+    // arm motors (initialize stuff and start logging)
+    if (!_cape_armed_once && gps.status() >= AP_GPS::GPS_OK_FIX_3D && _cape_arm_state==true) {
+        set_mode(GUIDED);
+        pre_arm_checks(true);
+        if(ap.pre_arm_check && arm_checks(true) ) {
+            if (init_arm_motors()) {
+                set_auto_armed(true);
+                _cape_armed_once=true;
+            }
+        }
+    }
+
     hal.gpio->write(PX4_WEARABLE_LED, _cape_arm_state ? HIGH : LOW);
 
     // Send update to drone
-    if(_cape_update_counter <= 0) {
-        if( inertial_nav.position_ok() ) {
+    if(_cape_update_counter <= 0 ) {
+        if( inertial_nav.position_ok() && _cape_arm_state==true) { // if we have an inertial fix and have pressed the button
             // pull position from interial nav library
             int32_t longitude = inertial_nav.get_longitude();
             int32_t latitude = inertial_nav.get_latitude();

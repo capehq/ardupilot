@@ -220,7 +220,7 @@ static bool init_arm_motors()
     output_min();
 
     // finally actually arm the motors
-    // motors.armed(true);
+    motors.armed(true);
 
     // log arming to dataflash
     Log_Write_Event(DATA_ARMED);
