@@ -795,6 +795,7 @@ static void update_GPS_50Hz(void)
     for (uint8_t i=0; i<gps.num_sensors(); i++) {
         if (gps.last_message_time_ms(i) != last_gps_reading[i]) {
             last_gps_reading[i] = gps.last_message_time_ms(i);
+            DataFlash.Log_Write_GPS(gps, 0, current_loc.alt);
             if (should_log(MASK_LOG_GPS)) {
                 DataFlash.Log_Write_GPS(gps, i, current_loc.alt);
             }
