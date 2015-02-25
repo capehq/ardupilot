@@ -24,6 +24,8 @@ static bool _cape_nav_cmds_remaining;
 static bool _cape_armed_once = false;
 static bool _cape_waiting_for_takeoff = true;
 
+static int _cape_current_wp_user = 0; //current waypoint ahead of user
+
 void Cape_init() {
     // Set up Serial 4
     if(hal.uartE) {
@@ -37,6 +39,8 @@ void Cape_init() {
         _cape_nav_cmds_remaining = mission.get_next_nav_cmd(_cape_prev_nav_cmd.index + 1, _cape_curr_nav_cmd);
         hal.uartE->printf("Prev index %d, cur index %d\n", _cape_prev_nav_cmd.index, _cape_curr_nav_cmd.index);
     }
+
+    _cape_current_wp_user = _cape_curr_nav_cmd.index;
 }
 
 void Cape_FastLoop() {
@@ -148,6 +152,23 @@ void Cape_UpdateFollowPosition() {
     int32_t latitude = inertial_nav.get_latitude();
     float altitude = inertial_nav.get_altitude();
 
+    distance_to_plane = getDistanceToPlane(_cape_curr_nav_cmd.index);
+
+    hal.uartE->printf("Distance %f\n", distance_to_plane);
+
+    if((distance_to_plane <= g.rail_distance_threshold && _cape_curr_nav_cmd.index>early_wp_index) || 
+        (distance_to_plane <= g.early_dist_thres && _cape_curr_nav_cmd.index<=early_wp_index)) { // temporary shitty code, will fix if it works
+        // Move to next waypoint
+        _cape_prev_nav_cmd = _cape_curr_nav_cmd;
+        _cape_nav_cmds_remaining = mission.get_next_nav_cmd(_cape_prev_nav_cmd.index + 1, _cape_curr_nav_cmd);
+        if(_cape_nav_cmds_remaining) {
+            mission.set_current_cmd(_cape_curr_nav_cmd.index);
+        }
+    }
+}
+
+
+float getDistanceToPlane(int waypoint_number) {
     // Calculate distances in cm
     float lon_to_cm_scaling = longitude_scale(ahrs.get_home()) * LATLON_TO_CM;
 
@@ -172,19 +193,10 @@ void Cape_UpdateFollowPosition() {
     float ww_dalt_f = _cape_curr_nav_cmd.content.location.alt - _cape_wearable_altitude;
 
     // Dot product of norm(waypoint to prev waypoint) and (waypoint to wearable)
-    distance_to_plane = (ww_dlng_f * wp_dlng_f) + (ww_dlat_f * wp_dlat_f) + (ww_dalt_f * wp_dalt_f);
-    hal.uartE->printf("Distance %f\n", distance_to_plane);
-
-    if((distance_to_plane <= g.rail_distance_threshold && _cape_curr_nav_cmd.index>early_wp_index) || 
-        (distance_to_plane <= g.early_dist_thres && _cape_curr_nav_cmd.index<=early_wp_index)) { // temporary shitty code, will fix if it works
-        // Move to next waypoint
-        _cape_prev_nav_cmd = _cape_curr_nav_cmd;
-        _cape_nav_cmds_remaining = mission.get_next_nav_cmd(_cape_prev_nav_cmd.index + 1, _cape_curr_nav_cmd);
-        if(_cape_nav_cmds_remaining) {
-            mission.set_current_cmd(_cape_curr_nav_cmd.index);
-        }
-    }
+    return (ww_dlng_f * wp_dlng_f) + (ww_dlat_f * wp_dlat_f) + (ww_dalt_f * wp_dalt_f);    
 }
+
+
 
 void Cape_SetROI() {
     Location roi_loc;
