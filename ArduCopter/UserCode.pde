@@ -41,6 +41,6 @@ void userhook_SlowLoop()
 #ifdef USERHOOK_SUPERSLOWLOOP
 void userhook_SuperSlowLoop()
 {
-    // put your 1Hz code here
+	Cape_SuperSlowLoop();
 }
 #endif

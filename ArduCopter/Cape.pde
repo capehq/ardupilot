@@ -1,5 +1,22 @@
 /// -*- tab-width: 4; Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil -*-
 
+#include <AP_InertialSensor_MPU6000.h>
+#include <AP_HAL.h>
+
+AP_HAL::SPIDeviceDriver *_spi;
+
+static uint8_t counter = 0;
+
+uint8_t reg = 0x03;
+uint8_t addr = reg | 0x80; // Set most significant bit
+char buffy[100];
+
+uint8_t tx[2];
+uint8_t rx[2];
+
+//#include <stdio.h>
+//#include <stdlib.h>
+
 #define CAPE_UPDATE_INTERVAL 10
 static uint32_t _cape_update_counter = 0;
 #define CAPE_ARM_DELAY 50 // 500ms delay
@@ -22,9 +39,33 @@ void Cape_init() {
     if(hal.uartE) {
         hal.uartE->begin(9600, 32, 32);
     }
+    _spi = hal.spi->device(AP_HAL::SPIDevice_MPU6000);
+
+    _spi->set_bus_speed(AP_HAL::SPIDeviceDriver::SPI_SPEED_HIGH);
 }
 
 void Cape_FastLoop() {
+    if (counter >= 25) {
+        gcs_send_text_P(SEVERITY_HIGH, PSTR("Register Values:  "));
+
+        for (int i=0; i< 0x0B; i++) {
+            addr = i;
+            addr = addr | 0x80; // Set most significant bit
+            tx[0] = addr;
+            tx[1] = 0;
+            _spi->transaction(tx, rx, 2);
+            
+            gcs_send_text_P(SEVERITY_HIGH, PSTR(itoa(rx[1], buffy, 10)));
+            hal.scheduler->delay(10);
+        }
+
+        counter = 0;
+    } 
+
+    counter++;
+
+
+
     // Check and update button state
     if(hal.gpio->read(PX4_WEARABLE_BTN) == HIGH) {
         if(_cape_arm_counter > CAPE_ARM_DELAY) {
@@ -86,9 +127,6 @@ void Cape_FastLoop() {
     else
         _cape_update_counter--;
 }
-
-
-
 
 
 //// Checksum from mavlink checksum.h
