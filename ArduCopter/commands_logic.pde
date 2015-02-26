@@ -455,9 +455,7 @@ static void do_loiter_time(const AP_Mission::Mission_Command& cmd)
 // do_spline_wp - initiate move to next waypoint
 static void do_spline_wp(const AP_Mission::Mission_Command& cmd)
 {
-    cmd.content.location.altitude=cmd.content.location.altitude+g.drone_height_off;
     Vector3f local_pos = pv_location_to_vector(cmd.content.location);
-    cmd.content.location.altitude=cmd.content.location.altitude-g.drone_height_off;
 
     // this will be used to remember the time in millis after we reach or pass the WP.
     loiter_time = 0;
@@ -494,6 +492,8 @@ static void do_spline_wp(const AP_Mission::Mission_Command& cmd)
     }
 
     // set spline navigation target
+    local_pos.z+=g.drone_height_off;
+    next_destination.z+=g.drone_height_off;
     auto_spline_start(local_pos, stopped_at_start, seg_end_type, next_destination);
 }
 

@@ -54,7 +54,7 @@ void Cape_FastLoop() {
             if(ap.pre_arm_check && arm_checks(true)  && _cape_wearable_arm) {
                 if (init_arm_motors()) {
                     set_auto_armed(true);
-                    guided_takeoff_start(_cape_drone_prev_nav_cmd.content.location.alt);
+                    guided_takeoff_start(_cape_drone_prev_nav_cmd.content.location.alt+g.drone_height_off);
                     _cape_armed_once = true;
                     _cape_waiting_for_takeoff = true;
                 }
