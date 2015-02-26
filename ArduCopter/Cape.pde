@@ -182,8 +182,8 @@ float getDistanceToPlane(int waypoint_number) {
     static AP_Mission::Mission_Command _temp_prev_nav_cmd; 
     static AP_Mission::Mission_Command _temp_curr_nav_cmd; 
 
-    mission.get_next_nav_cmd(waypoint_number-2, _temp_prev_nav_cmd); 
-    mission.get_next_nav_cmd(waypoint_number-1, _temp_curr_nav_cmd);
+    mission.get_next_nav_cmd(waypoint_number-1, _temp_prev_nav_cmd); 
+    mission.get_next_nav_cmd(waypoint_number, _temp_curr_nav_cmd);
 
     // Calculate distances in cm
     float lon_to_cm_scaling = longitude_scale(ahrs.get_home()) * LATLON_TO_CM;
