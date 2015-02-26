@@ -18,13 +18,14 @@ static uint8_t _cape_wearable_misc;
 
 // #define CAPE_RAIL_DISTANCE_THRESHOLD 1000.f // Distance in cm
 
-static AP_Mission::Mission_Command _cape_prev_nav_cmd;
-static AP_Mission::Mission_Command _cape_curr_nav_cmd;
+static AP_Mission::Mission_Command _cape_drone_prev_nav_cmd;
+static AP_Mission::Mission_Command _cape_drone_curr_nav_cmd;
 static bool _cape_nav_cmds_remaining;
 static bool _cape_armed_once = false;
 static bool _cape_waiting_for_takeoff = true;
 
-static int _cape_current_wp_user = 0; //current waypoint ahead of user
+static AP_Mission::Mission_Command _cape_wearable_prev_nav_cmd; 
+static AP_Mission::Mission_Command _cape_wearable_curr_nav_cmd; //current waypoint ahead of user
 
 void Cape_init() {
     // Set up Serial 4
@@ -35,12 +36,13 @@ void Cape_init() {
 
     // Load first navigation commands
     _cape_nav_cmds_remaining = false;
-    if(mission.get_next_nav_cmd(1, _cape_prev_nav_cmd)) {
-        _cape_nav_cmds_remaining = mission.get_next_nav_cmd(_cape_prev_nav_cmd.index + 1, _cape_curr_nav_cmd);
-        hal.uartE->printf("Prev index %d, cur index %d\n", _cape_prev_nav_cmd.index, _cape_curr_nav_cmd.index);
+    if(mission.get_next_nav_cmd(1, _cape_drone_prev_nav_cmd)) {
+        _cape_nav_cmds_remaining = mission.get_next_nav_cmd(_cape_drone_prev_nav_cmd.index + 1, _cape_drone_curr_nav_cmd);
+        hal.uartE->printf("Prev index %d, cur index %d\n", _cape_drone_prev_nav_cmd.index, _cape_drone_curr_nav_cmd.index);
     }
 
-    _cape_current_wp_user = _cape_curr_nav_cmd.index;
+    mission.get_next_nav_cmd(1, _cape_wearable_prev_nav_cmd);
+    mission.get_next_nav_cmd(_cape_wearable_prev_nav_cmd.index + 1, _cape_wearable_curr_nav_cmd);
 }
 
 void Cape_FastLoop() {
@@ -52,7 +54,7 @@ void Cape_FastLoop() {
             if(ap.pre_arm_check && arm_checks(true)  && _cape_wearable_arm) {
                 if (init_arm_motors()) {
                     set_auto_armed(true);
-                    guided_takeoff_start(_cape_prev_nav_cmd.content.location.alt);
+                    guided_takeoff_start(_cape_drone_prev_nav_cmd.content.location.alt);
                     _cape_armed_once = true;
                     _cape_waiting_for_takeoff = true;
                 }
@@ -61,14 +63,14 @@ void Cape_FastLoop() {
 
         if(_cape_armed_once && _cape_waiting_for_takeoff) {
             if(inertial_nav.position_ok()) {
-                if(fabsf(_cape_prev_nav_cmd.content.location.alt - inertial_nav.get_altitude()) < 100.f) {
+                if(fabsf(_cape_drone_prev_nav_cmd.content.location.alt - inertial_nav.get_altitude()) < 100.f) {
                     set_mode(AUTO);
                     _cape_waiting_for_takeoff = false;
                 }
             }
         }
 
-        if(_cape_armed_once && !_cape_waiting_for_takeoff) {
+        if(_cape_armed_once && !_cape_waiting_for_takeoff) { //reached target altitude
             Cape_UpdateFollowPosition();
             // Cape_SetROI();
         }
@@ -76,13 +78,6 @@ void Cape_FastLoop() {
         if (_cape_armed_once) {
             Cape_SetROI(); // Set ROI soon as we take-off (so we get pitch tracking on take-off too). Does not cause drone to yaw during takeoff
         }
-
-        // To track which waypoint the skier is approaching
-        if (getDistanceToPlane(_cape_current_wp_user < 0)) {
-            _cape_current_wp_user++; // we've passed the wp
-        }
-        
-
     }
 }
 
@@ -158,27 +153,37 @@ void Cape_UpdateFollowPosition() {
     int32_t latitude = inertial_nav.get_latitude();
     float altitude = inertial_nav.get_altitude();
 
-    distance_to_plane = getDistanceToPlane(_cape_curr_nav_cmd.index);
+    distance_to_plane = getDistanceToPlane(_cape_drone_curr_nav_cmd.index);
 
     hal.uartE->printf("Distance %f\n", distance_to_plane);
 
-    if((distance_to_plane <= g.rail_distance_threshold && _cape_curr_nav_cmd.index>early_wp_index) || 
-        (distance_to_plane <= g.early_dist_thres && _cape_curr_nav_cmd.index<=early_wp_index)) { 
+    if((distance_to_plane <= g.rail_distance_threshold && _cape_drone_curr_nav_cmd.index>early_wp_index) || 
+        (distance_to_plane <= g.early_dist_thres && _cape_drone_curr_nav_cmd.index<=early_wp_index)) { 
         // Move to next waypoint
-        _cape_prev_nav_cmd = _cape_curr_nav_cmd;
-        _cape_nav_cmds_remaining = mission.get_next_nav_cmd(_cape_prev_nav_cmd.index + 1, _cape_curr_nav_cmd);
+        _cape_drone_prev_nav_cmd = _cape_drone_curr_nav_cmd;
+        _cape_nav_cmds_remaining = mission.get_next_nav_cmd(_cape_drone_prev_nav_cmd.index + 1, _cape_drone_curr_nav_cmd);
         if(_cape_nav_cmds_remaining) {
-            mission.set_current_cmd(_cape_curr_nav_cmd.index);
+            mission.set_current_cmd(_cape_drone_curr_nav_cmd.index);
+        }
+    }
+
+
+    // To update which waypoint the skier is approaching
+    if (getDistanceToPlane(_cape_wearable_curr_nav_cmd.index) < 0) {
+        if (_cape_wearable_curr_nav_cmd.index <= mission.num_commands() - 3) { //don't advance if next waypoint is RTL (last wp)
+            _cape_wearable_prev_nav_cmd = _cape_wearable_curr_nav_cmd;
+            mission.get_next_nav_cmd(_cape_wearable_prev_nav_cmd.index + 1, _cape_wearable_curr_nav_cmd);
         }
     }
 }
 
-// 2D distance
+// 2D distance of user from plane that intersects waypoint_number
 float getDistanceToPlane(int waypoint_number) {
+    static AP_Mission::Mission_Command _temp_prev_nav_cmd; 
+    static AP_Mission::Mission_Command _temp_curr_nav_cmd; 
 
-    // no function called get_nav_cmd, but this is the desired functionality
-    static AP_Mission::Mission_Command _temp_prev_nav_cmd = get_nav_cmd(waypoint_number-1); 
-    static AP_Mission::Mission_Command _temp_curr_nav_cmd = get_nav_cmd(waypoint_number);
+    mission.get_next_nav_cmd(waypoint_number-2, _temp_prev_nav_cmd); 
+    mission.get_next_nav_cmd(waypoint_number-1, _temp_curr_nav_cmd);
 
     // Calculate distances in cm
     float lon_to_cm_scaling = longitude_scale(ahrs.get_home()) * LATLON_TO_CM;
@@ -188,10 +193,10 @@ float getDistanceToPlane(int waypoint_number) {
     float wp_dlng_f = wp_dlng * lon_to_cm_scaling;
     int32_t wp_dlat = _temp_curr_nav_cmd.content.location.lat - _temp_prev_nav_cmd.content.location.lat;
     float wp_dlat_f = wp_dlat * LATLON_TO_CM;
-    // float wp_dalt_f = _cape_curr_nav_cmd.content.location.alt - _cape_prev_nav_cmd.content.location.alt; //2d distance now
+    // float wp_dalt_f = _cape_drone_curr_nav_cmd.content.location.alt - _cape_drone_prev_nav_cmd.content.location.alt; //2d distance now
 
     // Normalize waypoint-to-prev-waypoint
-    float norm_wp = sqrtf(powf(wp_dlng_f, 2) + powf(wp_dlat_f, 2) + powf(wp_dalt_f, 2));
+    float norm_wp = sqrtf(powf(wp_dlng_f, 2) + powf(wp_dlat_f, 2));// + powf(wp_dalt_f, 2));
     wp_dlng_f /= norm_wp;
     wp_dlat_f /= norm_wp;
     // wp_dalt_f /= norm_wp;
@@ -201,23 +206,18 @@ float getDistanceToPlane(int waypoint_number) {
     float ww_dlng_f = ww_dlng * lon_to_cm_scaling;
     int32_t ww_dlat = _temp_curr_nav_cmd.content.location.lat - _cape_wearable_latitude;
     float ww_dlat_f = ww_dlat * LATLON_TO_CM;
-    // float ww_dalt_f = _cape_curr_nav_cmd.content.location.alt - _cape_wearable_altitude;
+    // float ww_dalt_f = _cape_drone_curr_nav_cmd.content.location.alt - _cape_wearable_altitude;
 
     // Dot product of norm(waypoint to prev waypoint) and (waypoint to wearable)
     return (ww_dlng_f * wp_dlng_f) + (ww_dlat_f * wp_dlat_f); // + (ww_dalt_f * wp_dalt_f);    
 }
 
 // Returns altitude of skier
-float getSkierAltitude(int waypoint_number) {
-
-    // no function called get_nav_cmd, but this is the desired functionality
-    static AP_Mission::Mission_Command _temp_prev_nav_cmd = get_nav_cmd(waypoint_number-1); 
-    static AP_Mission::Mission_Command _temp_curr_nav_cmd = get_nav_cmd(waypoint_number);
-
-    float d = getDistanceToPlane(waypoint_number);
-    float D = get_distance_cm(_temp_prev_nav_cmd.content.location,_temp_curr_nav_cmd.content.location); // function defined in ../libraries/AP_Math/location.cpp. 2D distance between current and previous waypoints
-    float wpAltDif = _temp_prev_nav_cmd.content.location.alt-_temp_curr_nav_cmd.content.location.alt;
-    return wpAltDif*d/D+_temp_curr_nav_cmd.content.location.alt;
+float getSkierAltitude() {
+    float distanceWearableToPlane = getDistanceToPlane(_cape_wearable_curr_nav_cmd.index);
+    float distanceBetweenWaypoints = abs(get_distance_cm(_cape_wearable_prev_nav_cmd.content.location,_cape_wearable_curr_nav_cmd.content.location)); // function defined in ../libraries/AP_Math/location.cpp. 2D distance between current and previous waypoints
+    float wpAltDif = _cape_wearable_prev_nav_cmd.content.location.alt-_cape_wearable_curr_nav_cmd.content.location.alt;
+    return wpAltDif * distanceWearableToPlane / distanceBetweenWaypoints + _cape_wearable_curr_nav_cmd.content.location.alt;
 }
 
 
@@ -227,7 +227,7 @@ void Cape_SetROI() {
     roi_loc.lat = _cape_wearable_latitude;
     roi_loc.lng = _cape_wearable_longitude;
     // roi_loc.alt = _cape_wearable_altitude; // needs to be changed
-    // roi_loc.alt = getSkierAltitude(_cape_current_wp_user) // something like this perhaps
+    roi_loc.alt = getSkierAltitude(); // something like this perhaps
     roi_gps_coords=roi_loc; // for logging purposes
     set_auto_yaw_roi(roi_loc);
 }
