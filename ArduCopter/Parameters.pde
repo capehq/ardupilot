@@ -170,6 +170,13 @@ const AP_Param::Info var_info[] PROGMEM = {
     // @User: Advanced
     GSCALAR(early_dist_thres, "EARLY_DIST_THRES", EARLY_DIST_THRES_DEFAULT),
 
+    // @Param: DRONE_HEIGHT_OFF
+    // @DisplayName: Drone Height Off
+    // @Description: Height above ground we want drone to fly during spline mission  
+    // @Range: 0 10000
+    // @User: Advanced
+    GSCALAR(drone_height_off, "DRONE_HEIGHT_OFF", DRONE_HEIGHT_OFF_DEFAULT),
+
     // @Param: MAG_ENABLE
     // @DisplayName: Compass enable/disable
     // @Description: Setting this to Enabled(1) will enable the compass. Setting this to Disabled(0) will disable the compass

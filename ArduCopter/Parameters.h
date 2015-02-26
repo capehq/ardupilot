@@ -125,7 +125,8 @@ public:
         k_param_dcmcheck_thresh,        // 59
         k_param_log_bitmask,
         k_param_rail_distance_threshold, // 61 it seems. gabe added
-        k_param_early_dist_thres, // gabe added
+        k_param_early_dist_thres, // gabe added. Can add 2 more parameters here
+        k_param_drone_height_off, // g
 
         // 65: AP_Limits Library
         k_param_limits = 65,            // deprecated - remove
@@ -358,6 +359,7 @@ public:
 
     AP_Int32        rail_distance_threshold;     // Projected distance from the skier that the drone will move to the next wp   
     AP_Int32        early_dist_thres;            // Projected distance from the skier that the drone will move to the next wp for the first two WPs
+    AP_Int32        drone_height_off;            // Height above ground we want drone to fly during spline mission
     
     // Waypoints
     //

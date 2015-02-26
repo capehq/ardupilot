@@ -305,7 +305,7 @@
  # define GPS_HDOP_GOOD_DEFAULT         200     // minimum hdop that represents a good position.  used during pre-arm checks if fence is enabled
 #endif
 
-// Rail distance threshold
+// Rail distance threshold. gabe added
 #ifndef RAIL_DIST_THRESH_DEFAULT
  # define RAIL_DIST_THRESH_DEFAULT      3000     // default distance of 30m
 #endif
@@ -313,6 +313,11 @@
 // Early rail distance threshold
 #ifndef EARLY_DIST_THRES_DEFAULT
  # define EARLY_DIST_THRES_DEFAULT      3000     // default distance of 30m
+#endif
+
+// Drone height offset
+#ifndef DRONE_HEIGHT_OFF_DEFAULT
+ # define DRONE_HEIGHT_OFF_DEFAULT      1500     // default height of 15m
 #endif
 
 // GCS failsafe
