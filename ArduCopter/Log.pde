@@ -472,6 +472,8 @@ struct PACKED log_Cust {
     // uint32_t rtl_state_log; // I
     float    b_current_total; // f
     float dist_to_plane; // f
+    float skier_to_plane;
+    float skierHeight;
     // uint32_t gps_week_ms;
 };
 
@@ -541,6 +543,9 @@ static void Log_Write_Custom(uint8_t mode, const Location &current_loc, const Lo
         // rtl_state_log   : rtl_state_int,
         b_current_total : battery.current_total_mah(),
         dist_to_plane   : distance_to_plane,
+        skier_to_plane  : dist_skier_to_plane,
+        skierHeight     : skierHeight,
+
         // gps_week_ms     : gps.time_week_ms(0),
     };
     DataFlash.WriteBlock(&pkt, sizeof(pkt));    
@@ -766,7 +771,7 @@ static const struct LogStructure log_structure[] PROGMEM = {
     { LOG_PERFORMANCE_MSG, sizeof(log_Performance), 
       "PM",  "HHIhBHB",    "NLon,NLoop,MaxT,PMT,I2CErr,INSErr,INAVErr" },
     { LOG_CUST_MSG, sizeof(log_Cust),       // note, gps stuff removed for ease of viewing logs for now
-      "CUST", "IMILLeLLeff",      "tMS,CM,WpD,roiX,roiY,roiZ,lat,lon,inAlt,ct,DtP" },
+      "CUST", "IMILLeLLeffff",      "tMS,CM,WpD,roiX,roiY,roiZ,lat,lon,inAlt,ct,DtP,DstP,sH" },
     { LOG_ATTITUDE_MSG, sizeof(log_Attitude),       
       "ATT", "IccccCCCC",    "TimeMS,DesRoll,Roll,DesPitch,Pitch,DesYaw,Yaw,ErrRP,ErrYaw" },
     { LOG_MODE_MSG, sizeof(log_Mode),

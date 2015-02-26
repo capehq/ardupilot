@@ -76,6 +76,7 @@ void Cape_FastLoop() {
         }
 
         if (_cape_armed_once) {
+            skierHeight=getSkierAltitude();
             Cape_SetROI(); // Set ROI soon as we take-off (so we get pitch tracking on take-off too). Does not cause drone to yaw during takeoff
         }
     }
@@ -169,7 +170,8 @@ void Cape_UpdateFollowPosition() {
 
 
     // To update which waypoint the skier is approaching
-    if (getDistanceToPlane(_cape_wearable_curr_nav_cmd.index) < 0) {
+    dist_skier_to_plane=getDistanceToPlane(_cape_wearable_curr_nav_cmd.index);
+    if (dist_skier_to_plane < 0) {
         if (_cape_wearable_curr_nav_cmd.index <= mission.num_commands() - 3) { //don't advance if next waypoint is RTL (last wp)
             _cape_wearable_prev_nav_cmd = _cape_wearable_curr_nav_cmd;
             mission.get_next_nav_cmd(_cape_wearable_prev_nav_cmd.index + 1, _cape_wearable_curr_nav_cmd);
@@ -227,7 +229,7 @@ void Cape_SetROI() {
     roi_loc.lat = _cape_wearable_latitude;
     roi_loc.lng = _cape_wearable_longitude;
     // roi_loc.alt = _cape_wearable_altitude; // needs to be changed
-    roi_loc.alt = getSkierAltitude(); // something like this perhaps
+    roi_loc.alt = skierHeight; // something like this perhaps
     roi_gps_coords=roi_loc; // for logging purposes
     set_auto_yaw_roi(roi_loc);
 }
