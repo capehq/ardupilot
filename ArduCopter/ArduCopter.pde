@@ -1116,6 +1116,8 @@ static void update_batt_compass(void)
 // should be run at 10hz
 static void ten_hz_logging_loop()
 {
+    Log_Write_Custom(control_mode,current_loc,roi_gps_coords);
+
     if (should_log(MASK_LOG_ATTITUDE_MED)) {
         Log_Write_Attitude();
         // Log_Write_Custom2(control_mode,current_loc); //,gps);
@@ -1266,7 +1268,7 @@ static void update_GPS(void)
             // log GPS message
             if (should_log(MASK_LOG_GPS)) {
                 DataFlash.Log_Write_GPS(gps, i, current_loc.alt);
-                Log_Write_Custom(control_mode,current_loc,roi_gps_coords); 
+                //Log_Write_Custom(control_mode,current_loc,roi_gps_coords); 
             }
 
             gps_updated = true;
