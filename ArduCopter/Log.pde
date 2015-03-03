@@ -491,36 +491,6 @@ struct PACKED log_Attitude {
 // Writing a custom packet
 static void Log_Write_Custom(uint8_t mode, const Location &current_loc, const Location &roi_gps_coords) //, const AP_GPS &gps)
 {
-    // Vector3f vec = roi_WP.get();
-    // Vector3f vec = roi_WP;
-    // uint32_t exx = roi_WP[100];
-    // Location temp = roi_loc; // doesn't compile, roi_loc is a local variable in GCS_Mavlink.pde
-    // if (rtl_state==InitialClimb) {
-    //     rtl_state_int=1;
-    // } else if (rtl_state==ReturnHome) {
-    //     rtl_state_int=1;
-    // } else if (rtl_state==) {
-    //     rtl_state_int=1;
-    // } else if (rtl_state==) {
-    //     rtl_state_int=1;
-    // }
-    // switch (rtl_state) {
-    // case InitialClimb:
-    //     rtl_state_int=1;
-    //     break;
-    // case ReturnHome:
-    //     rtl_state_int=2;
-    //     break;
-    // case LoiterAtHome:
-    //     rtl_state_int=3;
-    //     break;
-    // case FinalDescent:
-    //     rtl_state_int=4;
-    //     break;
-    // case Land:
-    //     rtl_state_int=5;
-    //     break;
-    // }
     struct log_Cust pkt = {
         LOG_PACKET_HEADER_INIT(LOG_CUST_MSG),
         time_ms         : time_cape_ROI_update,//hal.scheduler->millis(),
@@ -528,9 +498,6 @@ static void Log_Write_Custom(uint8_t mode, const Location &current_loc, const Lo
         // battery_voltage : (int16_t) (battery.voltage() * 100.0f),
         wp_dist         : wp_distance,
         // wp_dist2        : wp_distance2,
-        // roiX            : roi_WP[0],
-        // roiY            : roi_WP[1],
-        // roiZ            : roi_WP[2],
         roiX            : roi_gps_coords.lat,
         roiY            : roi_gps_coords.lng,
         roiZ            : roi_gps_coords.alt,        
