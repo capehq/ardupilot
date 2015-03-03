@@ -524,7 +524,7 @@ static void Log_Write_Custom(uint8_t mode, const Location &current_loc, const Lo
     // }
     struct log_Cust pkt = {
         LOG_PACKET_HEADER_INIT(LOG_CUST_MSG),
-        time_ms         : time_cape_ROI_updated;//hal.scheduler->millis(),
+        time_ms         : time_cape_ROI_update,//hal.scheduler->millis(),
         c_mode          : mode,
         // battery_voltage : (int16_t) (battery.voltage() * 100.0f),
         wp_dist         : wp_distance,
