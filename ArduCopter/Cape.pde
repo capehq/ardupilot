@@ -41,7 +41,7 @@ void Cape_init() {
 
 void Cape_FastLoop() {
     if(Cape_ReadFromWearable()) {
-        time_cape_ROI_updated = hal.scheduler->millis();
+        time_cape_ROI_update = hal.scheduler->millis();
         // New position received!
         if(!_cape_armed_once) {
             set_mode(GUIDED);
