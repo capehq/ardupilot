@@ -6,6 +6,8 @@
 #define CAPE_MESSAGE_ARM_ARM 0xaa
 #define CAPE_MESSAGE_ARM_DISARM 0x55
 #define early_wp_index 3
+#define sizeOfAltArray 5
+
 static uint8_t _cape_rx_buffer[CAPE_MESSAGE_LENGTH];
 static uint8_t _cape_prefix[] = "CAPE";
 static uint8_t _cape_bytes_received = 0;
@@ -15,6 +17,7 @@ static int32_t _cape_wearable_latitude;
 static float _cape_wearable_altitude;
 static bool _cape_wearable_arm;
 static uint8_t _cape_wearable_misc;
+static float _cape_wearable_altitude_vec[5];
 
 // #define CAPE_RAIL_DISTANCE_THRESHOLD 1000.f // Distance in cm
 
@@ -71,12 +74,21 @@ void Cape_FastLoop() {
             }
         }
 
+
+        
+
+
         if(_cape_armed_once && !_cape_waiting_for_takeoff) { //reached target altitude
             Cape_UpdateFollowPosition();
             // Cape_SetROI();
         }
 
         if (_cape_armed_once) {
+            // Keep running track of last five altitude readings
+            for (int i=1;i<sizeOfAltArray;i++) {
+                _cape_wearable_altitude_vec[i-1]=_cape_wearable_altitude_vec[i];
+            }
+            _cape_wearable_altitude_vec[sizeOfAltArray-1]=getSkierAltitude();
             Cape_SetROI(); // Set ROI soon as we take-off (so we get pitch tracking on take-off too). Does not cause drone to yaw during takeoff
         }
     }
@@ -229,9 +241,17 @@ void Cape_SetROI() {
     roi_loc.lat = _cape_wearable_latitude;
     roi_loc.lng = _cape_wearable_longitude;
     // roi_loc.alt = _cape_wearable_altitude; // needs to be changed
-    roi_loc.alt = getSkierAltitude();
+    roi_loc.alt = computeSkierAltAvg();
     roi_gps_coords=roi_loc; // for logging purposes
     set_auto_yaw_roi(roi_loc);
+}
+
+float computeSkierAltAvg() {
+    float tempAvg=0;
+    for (int i=0;i<sizeOfAltArray;i++) {
+        tempAvg+=_cape_wearable_altitude_vec[i];
+    }
+    return tempAvg/sizeOfAltArray;
 }
 
 
