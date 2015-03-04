@@ -61,8 +61,10 @@ void Cape_FastLoop() {
     if(_cape_update_counter <= 0 ) {
         if( inertial_nav.position_ok() && _cape_arm_state==true) { // if we have an inertial fix and have pressed the button
             // pull position from interial nav library
-            int32_t longitude = inertial_nav.get_longitude();
-            int32_t latitude = inertial_nav.get_latitude();
+            // int32_t longitude = inertial_nav.get_longitude();
+            // int32_t latitude = inertial_nav.get_latitude();
+            int32_t longitude = gps.location().lng;
+            int32_t latitude = gps.location().lat;
             float altitude = inertial_nav.get_altitude();
 
             *(int32_t*)(&(_cape_tx_buffer[4])) = longitude;
