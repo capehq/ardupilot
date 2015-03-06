@@ -57,7 +57,7 @@ void crash_check()
             // send message to gcs
             gcs_send_text_P(SEVERITY_HIGH,PSTR("Crash: Disarming"));
             // disarm motors
-            init_disarm_motors();
+            // init_disarm_motors();
         }
     }else{
         // we are not inverted so reset counter
