@@ -6,7 +6,7 @@
 #define CAPE_MESSAGE_ARM_ARM 0xaa
 #define CAPE_MESSAGE_ARM_DISARM 0x55
 #define early_wp_index 3
-#define sizeOfAltArray 5
+#define sizeOfAltArray 10
 
 static uint8_t _cape_rx_buffer[CAPE_MESSAGE_LENGTH];
 static uint8_t _cape_prefix[] = "CAPE";
