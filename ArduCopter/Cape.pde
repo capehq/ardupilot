@@ -17,7 +17,7 @@ static int32_t _cape_wearable_latitude;
 static float _cape_wearable_altitude;
 static bool _cape_wearable_arm;
 static uint8_t _cape_wearable_misc;
-static float _cape_wearable_altitude_vec[5];
+static float _cape_wearable_altitude_vec[sizeOfAltArray];
 
 // #define CAPE_RAIL_DISTANCE_THRESHOLD 1000.f // Distance in cm
 
