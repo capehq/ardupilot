@@ -26,22 +26,22 @@ void Cape_init() {
 
 void Cape_FastLoop() {
     // Check and update button state
-    if(hal.gpio->read(PX4_WEARABLE_BTN) == HIGH) {
-        if(_cape_arm_counter > CAPE_ARM_DELAY) {
-            // Do nothing
-        }
-        if(_cape_arm_counter == CAPE_ARM_DELAY) {
-            _cape_arm_state = !_cape_arm_state;
-            _cape_arm_counter++;
-        }
-        else
-        {
-            _cape_arm_counter++;
-        }
-    }
-    else {
-        _cape_arm_counter = 0;
-    }
+    // if(hal.gpio->read(PX4_WEARABLE_BTN) == HIGH) {
+    //     if(_cape_arm_counter > CAPE_ARM_DELAY) {
+    //         // Do nothing
+    //     }
+    //     if(_cape_arm_counter == CAPE_ARM_DELAY) {
+    //         _cape_arm_state = !_cape_arm_state;
+    //         _cape_arm_counter++;
+    //     }
+    //     else
+    //     {
+    //         _cape_arm_counter++;
+    //     }
+    // }
+    // else {
+    //     _cape_arm_counter = 0;
+    // }
 
     // arm motors (initialize stuff and start logging)
     if (!_cape_armed_once && gps.status() >= AP_GPS::GPS_OK_FIX_3D && _cape_arm_state==true) {
@@ -55,36 +55,36 @@ void Cape_FastLoop() {
         }
     }
 
-    hal.gpio->write(PX4_WEARABLE_LED, _cape_arm_state ? HIGH : LOW);
+    // hal.gpio->write(PX4_WEARABLE_LED, _cape_arm_state ? HIGH : LOW);
 
     // Send update to drone
-    if(_cape_update_counter <= 0 ) {
-        if( inertial_nav.position_ok() && _cape_arm_state==true) { // if we have an inertial fix and have pressed the button
-            // pull position from interial nav library
-            int32_t longitude = inertial_nav.get_longitude();
-            int32_t latitude = inertial_nav.get_latitude();
-            float altitude = inertial_nav.get_altitude();
+    // if(_cape_update_counter <= 0 ) {
+    //     if( inertial_nav.position_ok() && _cape_arm_state==true) { // if we have an inertial fix and have pressed the button
+    //         // pull position from interial nav library
+    //         int32_t longitude = inertial_nav.get_longitude();
+    //         int32_t latitude = inertial_nav.get_latitude();
+    //         float altitude = inertial_nav.get_altitude();
 
-            *(int32_t*)(&(_cape_tx_buffer[4])) = longitude;
-            *(int32_t*)(&(_cape_tx_buffer[8])) = latitude;
-            *(float*)(&(_cape_tx_buffer[12])) = altitude;
-            *(uint8_t*)(&(_cape_tx_buffer[16])) = _cape_arm_state ? CAPE_MESSAGE_ARM_ARM : CAPE_MESSAGE_ARM_DISARM;
-            *(uint8_t*)(&(_cape_tx_buffer[17])) = 0; // misc, unused
-            *(uint16_t*)(&(_cape_tx_buffer[CAPE_MESSAGE_CHKSUM_POS])) = 0;
+    //         *(int32_t*)(&(_cape_tx_buffer[4])) = longitude;
+    //         *(int32_t*)(&(_cape_tx_buffer[8])) = latitude;
+    //         *(float*)(&(_cape_tx_buffer[12])) = altitude;
+    //         *(uint8_t*)(&(_cape_tx_buffer[16])) = _cape_arm_state ? CAPE_MESSAGE_ARM_ARM : CAPE_MESSAGE_ARM_DISARM;
+    //         *(uint8_t*)(&(_cape_tx_buffer[17])) = 0; // misc, unused
+    //         *(uint16_t*)(&(_cape_tx_buffer[CAPE_MESSAGE_CHKSUM_POS])) = 0;
 
-            uint16_t checksum = crc_calculate(_cape_tx_buffer, CAPE_MESSAGE_LENGTH);
+    //         uint16_t checksum = crc_calculate(_cape_tx_buffer, CAPE_MESSAGE_LENGTH);
 
-            *(uint16_t*)(&(_cape_tx_buffer[CAPE_MESSAGE_CHKSUM_POS])) = checksum;
+    //         *(uint16_t*)(&(_cape_tx_buffer[CAPE_MESSAGE_CHKSUM_POS])) = checksum;
 
-            if(hal.uartE) {
-                hal.uartE->write(_cape_tx_buffer, CAPE_MESSAGE_LENGTH);
-            }
+    //         if(hal.uartE) {
+    //             hal.uartE->write(_cape_tx_buffer, CAPE_MESSAGE_LENGTH);
+    //         }
 
-            _cape_update_counter = CAPE_UPDATE_INTERVAL;
-        }
-    }
-    else
-        _cape_update_counter--;
+    //         _cape_update_counter = CAPE_UPDATE_INTERVAL;
+    //     }
+    // }
+    // else
+    //     _cape_update_counter--;
 }
 
 
