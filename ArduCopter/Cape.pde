@@ -44,7 +44,7 @@ void Cape_FastLoop() {
     // }
 
     // arm motors (initialize stuff and start logging)
-    if (!_cape_armed_once && gps.status() >= AP_GPS::GPS_OK_FIX_3D && _cape_arm_state==true) {
+    if (!_cape_armed_once && gps.status() >= AP_GPS::GPS_OK_FIX_3D) {  //&& _cape_arm_state==true) {
         set_mode(GUIDED);
         pre_arm_checks(true);
         if(ap.pre_arm_check && arm_checks(true) ) {
