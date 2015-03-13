@@ -5,7 +5,7 @@
 #define CAPE_MESSAGE_CHKSUM_POS (CAPE_MESSAGE_LENGTH - 2)
 #define CAPE_MESSAGE_ARM_ARM 0xaa
 #define CAPE_MESSAGE_ARM_DISARM 0x55
-#define early_wp_index 3
+#define early_wp_index 2
 #define sizeOfAltArray 100
 
 static int currIndexAltAvg = 0;
