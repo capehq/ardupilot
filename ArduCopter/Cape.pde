@@ -6,7 +6,10 @@
 #define CAPE_MESSAGE_ARM_ARM 0xaa
 #define CAPE_MESSAGE_ARM_DISARM 0x55
 #define early_wp_index 3
-#define sizeOfAltArray 10
+#define sizeOfAltArray 100
+
+static int currIndexAltAvg = 0;
+static float currInterpAlt = 0;
 
 static uint8_t _cape_rx_buffer[CAPE_MESSAGE_LENGTH];
 static uint8_t _cape_prefix[] = "CAPE";
@@ -74,24 +77,25 @@ void Cape_FastLoop() {
             }
         }
 
-
-        
-
-
         if(_cape_armed_once && !_cape_waiting_for_takeoff) { //reached target altitude
             Cape_UpdateFollowPosition();
+            currInterpAlt = getSkierAltitude();
             // Cape_SetROI();
         }
-
-        if (_cape_armed_once) {
-            // Keep running track of last five altitude readings
-            for (int i=1;i<sizeOfAltArray;i++) {
-                _cape_wearable_altitude_vec[i-1]=_cape_wearable_altitude_vec[i];
-            }
-            _cape_wearable_altitude_vec[sizeOfAltArray-1]=getSkierAltitude();
-            Cape_SetROI(); // Set ROI soon as we take-off (so we get pitch tracking on take-off too). Does not cause drone to yaw during takeoff
-        }
     }
+
+    if (_cape_armed_once) {
+        if (_cape_waiting_for_takeoff) currInterpAlt = 0; //ensure cam points at ground when taking off
+
+        _cape_wearable_altitude_vec[currIndexAltAvg] = currInterpAlt;
+        currIndexAltAvg = (currIndexAltAvg + 1) % sizeOfAltArray;
+        Cape_SetROI(); 
+    }
+}
+
+//10Hz loop
+void Cape_MediumLoop() {
+    //move ROI updates here if 100hz is too fast...
 }
 
 int Cape_ReadFromWearable() {
@@ -110,6 +114,8 @@ int Cape_ReadFromWearable() {
 
     return message_received;
 }
+
+
 
 int Cape_ValidateMessage(uint8_t byte) {
     // Check for invalid prefix

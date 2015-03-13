@@ -27,6 +27,7 @@ void userhook_50Hz()
 #ifdef USERHOOK_MEDIUMLOOP
 void userhook_MediumLoop()
 {
+	Cape_MediumLoop();
     // put your 10Hz code here
 }
 #endif
