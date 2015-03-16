@@ -749,7 +749,8 @@ void DataFlash_Class::Log_Write_RCOUT(void)
         chan5         : hal.rcout->read(4),
         chan6         : hal.rcout->read(5),
         chan7         : hal.rcout->read(6),
-        chan8         : hal.rcout->read(7)
+        chan8         : hal.rcout->read(7),
+        chan9         : hal.rcout->read(8)
     };
     WriteBlock(&pkt, sizeof(pkt));
 }

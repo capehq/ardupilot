@@ -243,6 +243,7 @@ struct PACKED log_RCOUT {
     uint16_t chan6;
     uint16_t chan7;
     uint16_t chan8;
+    uint16_t chan9;
 };
 
 struct PACKED log_BARO {
@@ -430,7 +431,7 @@ struct PACKED log_Ubx2 {
     { LOG_RCIN_MSG, sizeof(log_RCIN), \
       "RCIN",  "Ihhhhhhhhhhhhhh",     "TimeMS,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14" }, \
     { LOG_RCOUT_MSG, sizeof(log_RCOUT), \
-      "RCOU",  "Ihhhhhhhh",     "TimeMS,Chan1,Chan2,Chan3,Chan4,Chan5,Chan6,Chan7,Chan8" }, \
+      "RCOU",  "Ihhhhhhhhh",     "TimeMS,Chan1,Chan2,Chan3,Chan4,Chan5,Chan6,Chan7,Chan8,Chan9" }, \
     { LOG_BARO_MSG, sizeof(log_BARO), \
       "BARO",  "Iffcf", "TimeMS,Alt,Press,Temp,CRt" }, \
     { LOG_POWR_MSG, sizeof(log_POWR), \
