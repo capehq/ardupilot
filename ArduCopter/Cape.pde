@@ -21,6 +21,7 @@ static float _cape_wearable_altitude;
 static bool _cape_wearable_arm;
 static uint8_t _cape_wearable_misc;
 static float _cape_wearable_altitude_vec[sizeOfAltArray];
+static float _cape_alt_average_sum = 0;
 
 // #define CAPE_RAIL_DISTANCE_THRESHOLD 1000.f // Distance in cm
 
@@ -86,7 +87,8 @@ void Cape_FastLoop() {
 
     if (_cape_armed_once) {
         if (_cape_waiting_for_takeoff) currInterpAlt = 0; //ensure cam points at ground when taking off
-
+        _cape_alt_average_sum = _cape_alt_average_sum - _cape_wearable_altitude_vec[currIndexAltAvg];
+        _cape_alt_average_sum = _cape_alt_average_sum + currInterpAlt;
         _cape_wearable_altitude_vec[currIndexAltAvg] = currInterpAlt;
         currIndexAltAvg = (currIndexAltAvg + 1) % sizeOfAltArray;
         Cape_SetROI(); 
@@ -253,11 +255,7 @@ void Cape_SetROI() {
 }
 
 float computeSkierAltAvg() {
-    float tempAvg=0;
-    for (int i=0;i<sizeOfAltArray;i++) {
-        tempAvg+=_cape_wearable_altitude_vec[i];
-    }
-    return tempAvg/sizeOfAltArray;
+    return _cape_alt_average_sum/sizeOfAltArray;
 }
 
 
