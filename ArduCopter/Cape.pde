@@ -101,9 +101,7 @@ void Cape_FastLoop() {
 //10Hz loop
 void Cape_MediumLoop() {
     //move ROI updates here if 100hz is too fast...
-
-
-
+    PulseGen(); // even though it is calling this function at 10 Hz, the pulse is emitted more slowly
 }
 
 int Cape_ReadFromWearable() {
