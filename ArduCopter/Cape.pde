@@ -7,6 +7,9 @@
 #define CAPE_MESSAGE_ARM_DISARM 0x55
 #define early_wp_index 3
 #define sizeOfAltArray 100
+#define HEARTBEAT_INTERVAL 5000 // in milliseconds
+#define SEND_HEARTBEAT 0xF
+#define HEARTBEAT_LENGTH 1 // length of heartbeat in bytes
 
 static int currIndexAltAvg = 0;
 static float currInterpAlt = 0;
@@ -98,6 +101,9 @@ void Cape_FastLoop() {
 //10Hz loop
 void Cape_MediumLoop() {
     //move ROI updates here if 100hz is too fast...
+
+
+
 }
 
 int Cape_ReadFromWearable() {
@@ -330,4 +336,43 @@ static inline void crc_accumulate_buffer(uint16_t *crcAccum, const char *pBuffer
     while (length--) {
         crc_accumulate(*p++, crcAccum);
     }
+}
+
+// 2013-03-25 Addition for watchdog timer functionality
+// Added by Alex Loo
+
+/***********************************************************************
+Function
+    PulseGen
+Parameters
+    none
+Returns
+    none
+Description
+    This function generates a "heart beat" message over the XBee radio.
+Notes
+    none yet
+Author
+    Alex Loo
+***********************************************************************/
+void PulseGen() {
+    static uint16_t lastTime = 0;
+    uint16_t currentTime;
+
+    currentTime = hal.scheduler->millis();
+
+    // Check if drone has passed the last follow waypoint
+    if (_cape_drone_curr_nav_cmd.index == mission.num_commands()-1) {
+        // Drone is returning to base, so no need to send pulse. Immediately exit
+        return;
+    }
+    // Else, we are still doing the follow mission, so send out the heartbeat at the interval
+    else if (currentTime - lastTime > HEARTBEAT_INTERVAL) {
+        // interval has ellapsed, send heartbeat message
+        if (hal.uartE) {
+            hal.uartE->write(SEND_HEARTBEAT, HEARTBEAT_LENGTH);
+        }
+        lastTime = currentTime; // update last time
+    }
+    return;
 }
