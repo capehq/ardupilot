@@ -170,7 +170,7 @@ static inline void crc_accumulate_buffer(uint16_t *crcAccum, const char *pBuffer
 
 /***********************************************************************
 Function
-    PulseCheck
+    Cape_PulseCheck
 Parameters
     none
 Returns
@@ -183,7 +183,7 @@ Author
     Alex Loo
 ***********************************************************************/
 
-void PulseCheck() {
+void Cape_PulseCheck() {
     static uint16_t lastTime = 0;
     uint16_t currentTime;
 

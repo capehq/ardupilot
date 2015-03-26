@@ -42,5 +42,6 @@ void userhook_SlowLoop()
 void userhook_SuperSlowLoop()
 {
     // put your 1Hz code here
+    Cape_PulseCheck();
 }
 #endif
