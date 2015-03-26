@@ -9,7 +9,7 @@
 #define sizeOfAltArray 100
 #define HEARTBEAT_INTERVAL 5000 // in milliseconds
 #define SEND_HEARTBEAT 0xFE
-#define HEARTBEAT_LENGTH 1 // length of heartbeat in bytes
+//#define HEARTBEAT_LENGTH 1 // length of heartbeat in bytes
 
 static int currIndexAltAvg = 0;
 static float currInterpAlt = 0;
@@ -367,7 +367,7 @@ void Cape_PulseGen() {
     else if (currentTime - lastTime > HEARTBEAT_INTERVAL) {
         // interval has ellapsed, send heartbeat message
         if (hal.uartE) {
-            hal.uartE->write(SEND_HEARTBEAT, HEARTBEAT_LENGTH);
+            hal.uartE->write(SEND_HEARTBEAT);
         }
         lastTime = currentTime; // update last time
     }
