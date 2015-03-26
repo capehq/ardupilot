@@ -17,6 +17,9 @@ static uint8_t _cape_tx_buffer[CAPE_MESSAGE_LENGTH] = "CAPE";
 #define PX4_WEARABLE_LED                130
 #define PX4_WEARABLE_BTN                131
 
+#define HEARTBEAT_MESSAGE 0xFE
+#define HEARTBEAT_TIMEOUT 30000 // in milliseconds
+
 void Cape_init() {
     // Set up Serial 4
     if(hal.uartE) {
@@ -160,4 +163,44 @@ static inline void crc_accumulate_buffer(uint16_t *crcAccum, const char *pBuffer
     while (length--) {
         crc_accumulate(*p++, crcAccum);
     }
+}
+
+// 2013-03-25 Addition for watchdog timer functionality
+// Added by Alex Loo
+
+/***********************************************************************
+Function
+    PulseCheck
+Parameters
+    none
+Returns
+    none
+Description
+    This function disarms the wearable if a heartbeat has not been received in a predetermined time
+Notes
+    none yet
+Author
+    Alex Loo
+***********************************************************************/
+
+void PulseCheck() {
+    static uint16_t lastTime = 0;
+    uint16_t currentTime;
+
+    currentTime = hal.scheduler->millis();
+
+    // Check if a pulse has been received
+    if (hal.uartE) {
+        int8_t new_byte = hal.uartE->read(); // check XBee for new message
+        if (new_byte == HEARTBEAT_MESSAGE) {
+            // there was a new message and it was the correct heartbeat --> reset the timer
+            lastTime = currentTime;
+            return; // can exit function as no further checks needed
+        }
+    }
+    // if no new pulse, check to see if the last one was received longer ago than timeout allows
+    else if (currentTime - lastTime > HEARTBEAT_TIMEOUT) {
+        _cape_arm_state = false; // no heartbeat received in a while, disarm the wearable
+    }
+    return;
 }
