@@ -8,7 +8,7 @@
 #define early_wp_index 3
 #define sizeOfAltArray 100
 #define HEARTBEAT_INTERVAL 5000 // in milliseconds
-#define SEND_HEARTBEAT 0xF
+#define SEND_HEARTBEAT 0xFE
 #define HEARTBEAT_LENGTH 1 // length of heartbeat in bytes
 
 static int currIndexAltAvg = 0;
