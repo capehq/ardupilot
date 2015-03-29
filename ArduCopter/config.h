@@ -320,6 +320,11 @@
  # define DRONE_HEIGHT_OFF_DEFAULT      1500     // default height of 15m
 #endif
 
+// Drone height offset
+#ifndef FINAL_LAND_ALT_DEFAULT
+ # define FINAL_LAND_ALT_DEFAULT        500     // default height of 5m
+#endif
+
 // GCS failsafe
 #ifndef FS_GCS
  # define FS_GCS                        DISABLED

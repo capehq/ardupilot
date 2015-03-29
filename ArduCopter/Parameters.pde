@@ -177,6 +177,13 @@ const AP_Param::Info var_info[] PROGMEM = {
     // @User: Advanced
     GSCALAR(drone_height_off, "DRONE_HEIGHT_OFF", DRONE_HEIGHT_OFF_DEFAULT),
 
+    // @Param: FINAL_LAND_ALT
+    // @DisplayName: Final Land Alt
+    // @Description: Height above ground we want drone to transition to final landing speed
+    // @Range: 0 2000
+    // @User: Advanced
+    GSCALAR(final_land_alt, "FINAL_LAND_ALT", FINAL_LAND_ALT_DEFAULT),
+
     // @Param: MAG_ENABLE
     // @DisplayName: Compass enable/disable
     // @Description: Setting this to Enabled(1) will enable the compass. Setting this to Disabled(0) will disable the compass
