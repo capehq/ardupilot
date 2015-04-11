@@ -19,6 +19,7 @@ static uint8_t _cape_tx_buffer[CAPE_MESSAGE_LENGTH] = "CAPE";
 
 #define HEARTBEAT_MESSAGE 0xFE
 #define HEARTBEAT_TIMEOUT 30000 // in milliseconds
+//#define DEBUG
 
 void Cape_init() {
     // Set up Serial 4
@@ -168,6 +169,30 @@ static inline void crc_accumulate_buffer(uint16_t *crcAccum, const char *pBuffer
 // 2013-03-25 Addition for watchdog timer functionality
 // Added by Alex Loo
 
+/* 
+I had to add this function to print formatted debug messages. I tried to use 
+gcs_send_text_fmt, but I would always get an error. I traced this error to be that
+the prototype for gcs_send_text_fmt was always after my code in ArduCopter.cpp. I
+could not make it move up, so I just copied the function as one of my own to force
+it to work.
+*/
+void gcs_send_cape_debug(const prog_char_t *fmt, ...)
+{
+    va_list arg_list;
+    gcs[0].pending_status.severity = (uint8_t)SEVERITY_LOW;
+    va_start(arg_list, fmt);
+    hal.util->vsnprintf_P((char *)gcs[0].pending_status.text,
+            sizeof(gcs[0].pending_status.text), fmt, arg_list);
+    va_end(arg_list);
+    gcs[0].send_message(MSG_STATUSTEXT);
+    for (uint8_t i=1; i<num_gcs; i++) {
+        if (gcs[i].initialised) {
+            gcs[i].pending_status = gcs[0].pending_status;
+            gcs[i].send_message(MSG_STATUSTEXT);
+        }
+    }
+}
+
 /***********************************************************************
 Function
     Cape_PulseCheck
@@ -184,23 +209,114 @@ Author
 ***********************************************************************/
 
 void Cape_PulseCheck() {
-    static uint16_t lastTime = 0;
-    uint16_t currentTime;
+    static uint32_t lastTime = 0;
+    uint32_t currentTime;
+    uint32_t diffTime;
+
+    //gcs_send_text_P(SEVERITY_LOW, PSTR("Starting pulse check routine.\n"));
+    //delay(500);
+    currentTime = hal.scheduler->millis();
+    diffTime = currentTime - lastTime;
+    //gcs_send_cape_debug(PSTR("The difference is %u ms.\n"), (unsigned)(diffTime));
+    //delay(500);
+
+
+    if (!_cape_arm_state) {
+        // Wearable is not armed, so just update the counter
+        //gcs_send_text_P(SEVERITY_LOW, PSTR("Not armed. Updating last time.\n"));
+        //delay(500);
+        lastTime = currentTime;
+    } 
+    else {
+        // Wearable is armed
+        // First check if the XBee has received a heartbeat from the drone.
+        if (hal.uartE) {
+            //gcs_send_text_P(SEVERITY_LOW, PSTR("UART has data."));
+            //delay(500);
+            uint8_t new_byte = hal.uartE->read(); // check XBee for new message
+
+            #ifdef DEBUG
+            // spoof a received message
+            if (diffTime >= 10000)
+            {
+                new_byte = 0xFE;
+                gcs_send_text_P(SEVERITY_MED, PSTR("Spoofing a received hearbeat."));
+                //delay(500);
+            }
+            #endif
+
+            if (new_byte == HEARTBEAT_MESSAGE) {
+                // there was a new message and it was the correct heartbeat --> reset the timer
+                //gcs_send_text_P(SEVERITY_HIGH, PSTR("Heartbeat received.\n"));
+                //delay(500);
+                lastTime = currentTime;
+            }
+        }
+        // Second check if enough time has elapsed without a received heartbeat to disarm the wearable
+        if (diffTime >= HEARTBEAT_TIMEOUT) {
+            //gcs_send_text_P(SEVERITY_HIGH, PSTR("No heartbeat received in a while. Disarming the wearable.\n"));
+            //delay(500);
+            _cape_arm_state = false; // no heartbeat received in a while, disarm the wearable
+            init_disarm_motors();
+        }
+    }
+    //gcs_send_text_P(SEVERITY_LOW, PSTR("Exiting pulse check routine."));
+    //delay(500);
+}
+
+
+
+/*
+void Cape_PulseCheck() {
+    static uint32_t lastTime = 0;
+    uint32_t currentTime;
+    uint32_t diffTime;
+
+    gcs_send_text_P(SEVERITY_LOW, PSTR("Running pulse check.\n"));
+
+    // If the wearable is not currently armed update lastTime and exit out
+    if (_cape_arm_state == false){
+        gcs_send_text_P(SEVERITY_LOW, PSTR("Not armed. Updating last time.\n"));
+        lastTime = hal.scheduler->millis();
+        return;
+    }
+    
+    //gcs_send_text_P(SEVERITY_LOW, PSTR("Currently armed. Further checks needed."));
 
     currentTime = hal.scheduler->millis();
+    gcs_send_cape_debug(PSTR("The current time is %u ms.\n"), (unsigned)currentTime);
+    delay(100);
+    gcs_send_cape_debug(PSTR("The last time is %u ms.\n"), (unsigned)lastTime);
+    delay(100);
+    diffTime = currentTime - lastTime;
+    gcs_send_cape_debug(PSTR("The difference is %u ms.\n"), (unsigned)(diffTime));
+    delay(50);
+    
+    if (diffTime >= HEARTBEAT_TIMEOUT)
+    {
+        gcs_send_text_P(SEVERITY_LOW, PSTR("Time difference exceeds debug threshold.\n"));
+        delay(50);
+        _cape_arm_state = false; // no heartbeat received in a while, disarm the wearable
+        init_disarm_motors();
+        gcs_send_text_P(SEVERITY_LOW, PSTR("No heartbeat received in a while. Disarming the wearable.\n"));
+    }
 
     // Check if a pulse has been received
     if (hal.uartE) {
         int8_t new_byte = hal.uartE->read(); // check XBee for new message
         if (new_byte == HEARTBEAT_MESSAGE) {
             // there was a new message and it was the correct heartbeat --> reset the timer
+            gcs_send_text_P(SEVERITY_LOW, PSTR("Heartbeat received.\n"));
             lastTime = currentTime;
             return; // can exit function as no further checks needed
         }
     }
     // if no new pulse, check to see if the last one was received longer ago than timeout allows
-    else if (currentTime - lastTime > HEARTBEAT_TIMEOUT) {
+    else if (currentTime - lastTime > 10000) {
         _cape_arm_state = false; // no heartbeat received in a while, disarm the wearable
+        init_disarm_motors();
+        gcs_send_text_P(SEVERITY_LOW, PSTR("No heartbeat received in a while. Disarming the wearable.\n"));
     }
     return;
 }
+*/
