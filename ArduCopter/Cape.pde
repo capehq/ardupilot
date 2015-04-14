@@ -406,14 +406,14 @@ void Cape_PulseGen() {
     uint16_t currentTime;
     uint16_t diffTime;
 
-/*
+    gcs_send_cape_debug(PSTR("Previous index is %u out of %u.\n"), (unsigned)(_cape_drone_prev_nav_cmd.index), (unsigned)(mission.num_commands()));
+
     // Check if past the last waypoint for heartbeats
-    if (_cape_drone_curr_nav_cmd.index >= g.stop_heartbeat_WP) {
+    if (_cape_drone_prev_nav_cmd.index >= 3) {
         // No more need to send heartbeat. Immediately exit.
-        gcs_send_text_P(SEVERITY_LOW, PSTR("Not sending heartbeat."))
+        gcs_send_text_P(SEVERITY_LOW, PSTR("Not sending heartbeat."));
         return;
     }
-*/    
 
     currentTime = hal.scheduler->millis();
     diffTime = currentTime - lastTime;
@@ -422,7 +422,6 @@ void Cape_PulseGen() {
         hal.uartE->write(SEND_HEARTBEAT);
         gcs_send_text_P(SEVERITY_LOW, PSTR("Sending Cape heartbeat."));
         lastTime = currentTime;
-        gcs_send_cape_debug(PSTR("Current index is %i.\n"), (unsigned)(_cape_drone_curr_nav_cmd.index));
     }
     return;
 }
