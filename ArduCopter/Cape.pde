@@ -338,6 +338,30 @@ static inline void crc_accumulate_buffer(uint16_t *crcAccum, const char *pBuffer
 // 2013-03-25 Addition for watchdog timer functionality
 // Added by Alex Loo
 
+/* 
+I had to add this function to print formatted debug messages. I tried to use 
+gcs_send_text_fmt, but I would always get an error. I traced this error to be that
+the prototype for gcs_send_text_fmt was always after my code in ArduCopter.cpp. I
+could not make it move up, so I just copied the function as one of my own to force
+it to work.
+*/
+void gcs_send_cape_debug(const prog_char_t *fmt, ...)
+{
+    va_list arg_list;
+    gcs[0].pending_status.severity = (uint8_t)SEVERITY_LOW;
+    va_start(arg_list, fmt);
+    hal.util->vsnprintf_P((char *)gcs[0].pending_status.text,
+            sizeof(gcs[0].pending_status.text), fmt, arg_list);
+    va_end(arg_list);
+    gcs[0].send_message(MSG_STATUSTEXT);
+    for (uint8_t i=1; i<num_gcs; i++) {
+        if (gcs[i].initialised) {
+            gcs[i].pending_status = gcs[0].pending_status;
+            gcs[i].send_message(MSG_STATUSTEXT);
+        }
+    }
+}
+
 /***********************************************************************
 Function
     Cape_PulseGen
@@ -352,6 +376,7 @@ Notes
 Author
     Alex Loo
 ***********************************************************************/
+/*
 void Cape_PulseGen() {
     static uint16_t lastTime = 0;
     uint16_t currentTime;
@@ -370,6 +395,34 @@ void Cape_PulseGen() {
             hal.uartE->write(SEND_HEARTBEAT);
         }
         lastTime = currentTime; // update last time
+    }
+    return;
+}
+*/
+
+void Cape_PulseGen() {
+    // This function runs at 1Hz
+    static uint16_t lastTime = 0;
+    uint16_t currentTime;
+    uint16_t diffTime;
+
+/*
+    // Check if past the last waypoint for heartbeats
+    if (_cape_drone_curr_nav_cmd.index >= g.stop_heartbeat_WP) {
+        // No more need to send heartbeat. Immediately exit.
+        gcs_send_text_P(SEVERITY_LOW, PSTR("Not sending heartbeat."))
+        return;
+    }
+*/    
+
+    currentTime = hal.scheduler->millis();
+    diffTime = currentTime - lastTime;
+
+    if (hal.uartE && (diffTime > HEARTBEAT_INTERVAL)) {
+        hal.uartE->write(SEND_HEARTBEAT);
+        gcs_send_text_P(SEVERITY_LOW, PSTR("Sending Cape heartbeat."));
+        lastTime = currentTime;
+        gcs_send_cape_debug(PSTR("Current index is %i.\n"), (unsigned)(_cape_drone_curr_nav_cmd.index));
     }
     return;
 }
