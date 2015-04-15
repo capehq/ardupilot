@@ -7,7 +7,7 @@
 #define CAPE_MESSAGE_ARM_DISARM 0x55
 #define early_wp_index 3
 #define sizeOfAltArray 100
-#define HEARTBEAT_INTERVAL 5000 // in milliseconds
+#define HEARTBEAT_INTERVAL 2000 // in milliseconds
 #define SEND_HEARTBEAT 0xFE
 //#define HEARTBEAT_LENGTH 1 // length of heartbeat in bytes
 
@@ -18,6 +18,7 @@ static uint8_t _cape_rx_buffer[CAPE_MESSAGE_LENGTH];
 static uint8_t _cape_prefix[] = "CAPE";
 static uint8_t _cape_bytes_received = 0;
 
+static uint16_t _cape_stop_HB_index; // added by Alex on 2015-04-1
 static int32_t _cape_wearable_longitude;
 static int32_t _cape_wearable_latitude;
 static float _cape_wearable_altitude;
@@ -53,6 +54,9 @@ void Cape_init() {
 
     mission.get_next_nav_cmd(1, _cape_wearable_prev_nav_cmd);
     mission.get_next_nav_cmd(_cape_wearable_prev_nav_cmd.index + 1, _cape_wearable_curr_nav_cmd);
+
+    // Added by Alex on 2015-04-14
+    _cape_stop_HB_index = Find_Lowest_WP(); // Determine the index of waypoint at which to stop sending a heartbeat
 }
 
 void Cape_FastLoop() {
@@ -376,42 +380,26 @@ Notes
 Author
     Alex Loo
 ***********************************************************************/
-/*
-void Cape_PulseGen() {
-    static uint16_t lastTime = 0;
-    uint16_t currentTime;
 
-    currentTime = hal.scheduler->millis();
-
-    // Check if drone has passed the last follow waypoint
-    if (_cape_drone_curr_nav_cmd.index == mission.num_commands()-1) {
-        // Drone is returning to base, so no need to send pulse. Immediately exit
-        return;
-    }
-    // Else, we are still doing the follow mission, so send out the heartbeat at the interval
-    else if (currentTime - lastTime > HEARTBEAT_INTERVAL) {
-        // interval has ellapsed, send heartbeat message
-        if (hal.uartE) {
-            hal.uartE->write(SEND_HEARTBEAT);
-        }
-        lastTime = currentTime; // update last time
-    }
-    return;
-}
-*/
 
 void Cape_PulseGen() {
     // This function runs at 1Hz
     static uint16_t lastTime = 0;
     uint16_t currentTime;
     uint16_t diffTime;
+    static bool sentStopMessage = false;
 
-    gcs_send_cape_debug(PSTR("Previous index is %u out of %u.\n"), (unsigned)(_cape_drone_prev_nav_cmd.index), (unsigned)(mission.num_commands()));
+    //gcs_send_cape_debug(PSTR("Previous index is %u out of %u.\n"), (unsigned)(_cape_drone_prev_nav_cmd.index), (unsigned)(mission.num_commands()));
+    //gcs_send_cape_debug(PSTR("Stopping heartbeats once waypoint %u is passed.\n"), (unsigned)(_cape_stop_HB_index));
 
     // Check if past the last waypoint for heartbeats
-    if (_cape_drone_prev_nav_cmd.index >= 3) {
+    if (_cape_drone_prev_nav_cmd.index >= _cape_stop_HB_index) {
         // No more need to send heartbeat. Immediately exit.
-        gcs_send_text_P(SEVERITY_LOW, PSTR("Not sending heartbeat."));
+        //gcs_send_text_P(SEVERITY_LOW, PSTR("Not sending heartbeat."));
+        if (hal.uartE && !sentStopMessage) {
+            hal.uartE->write("STOP HB");
+            sentStopMessage = true;
+        }
         return;
     }
 
@@ -420,8 +408,79 @@ void Cape_PulseGen() {
 
     if (hal.uartE && (diffTime > HEARTBEAT_INTERVAL)) {
         hal.uartE->write(SEND_HEARTBEAT);
-        gcs_send_text_P(SEVERITY_LOW, PSTR("Sending Cape heartbeat."));
+        //gcs_send_text_P(SEVERITY_LOW, PSTR("Sending Cape heartbeat."));
         lastTime = currentTime;
     }
     return;
 }
+
+/***********************************************************************
+Function
+    Find_Lowest_WP
+Parameters
+    none
+Returns
+    lowestIndex - the index of the lowest altitude waypoint.
+Description
+    This function finds the waypoint with the lowest altitude and returns 
+    the waypoint. This only needs to be run once during the initialization
+    process.
+Notes
+    none yet
+Author
+    Alex Loo
+***********************************************************************/
+
+uint16_t Find_Lowest_WP() {
+    uint16_t lowestIndex = 1;
+    AP_Mission::Mission_Command currentWaypoint;
+    int32_t lowestAlt = 900000; // set starting value to 9000 m
+
+    for (int i = 1; i <= (mission.num_commands()-2); i++)
+    {
+        // get the next waypoint so that we can extract data
+        mission.get_next_nav_cmd(i, currentWaypoint);
+
+        // Compare this waypoints altitude against the lowest found yet
+        // Note that this is altitude in cm
+        if (currentWaypoint.content.location.alt <= lowestAlt) {
+            lowestAlt = currentWaypoint.content.location.alt;
+            lowestIndex = currentWaypoint.index;
+            //gcs_send_cape_debug(PSTR("Evaluating waypoint %u out of %u.\n"), (unsigned)currentWaypoint.index, (unsigned)mission.num_commands());
+        }
+    }
+    hal.uartE->printf("\n\nThe lowest waypoint is waypoint #%d.\n\n", lowestIndex);
+    return lowestIndex;
+}
+
+/***********************************************************************
+Function
+    Cape_Status_Message
+Parameters
+    none
+Returns
+    none
+Description
+    A function that spits out status for drone.
+Notes
+    none yet
+Author
+    Alex Loo
+***********************************************************************/
+/*
+void Cape_Status_Message() {
+    static uint32_t lastTime = 0;
+    uint32_t currentTime;
+    uint32_t diffTime;
+
+    currentTime = hal.scheduler->millis();
+    diffTime = currentTime - lastTime;
+
+    if (diffTime >= 5000) {
+        hal.uartE->printf("\n\nCurrently heading to waypoint %d out of %d.\n", _cape_drone_curr_nav_cmd.index, mission.num_commands());
+        hal.uartE->printf("Stopping heartbeats once past waypoint #%d.\n\n", _cape_stop_HB_index);
+        lastTime = currentTime;
+    }
+return;
+}
+*/

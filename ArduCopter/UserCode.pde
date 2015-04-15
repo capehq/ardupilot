@@ -27,8 +27,9 @@ void userhook_50Hz()
 #ifdef USERHOOK_MEDIUMLOOP
 void userhook_MediumLoop()
 {
-	Cape_MediumLoop();
+	//Cape_MediumLoop();
     // put your 10Hz code here
+    Cape_PulseGen();
 }
 #endif
 
@@ -43,6 +44,6 @@ void userhook_SlowLoop()
 void userhook_SuperSlowLoop()
 {
     // put your 1Hz code here
-    Cape_PulseGen();
+    //Cape_Status_Message();
 }
 #endif
