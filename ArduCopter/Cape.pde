@@ -7,7 +7,7 @@
 #define CAPE_MESSAGE_ARM_DISARM 0x55
 #define early_wp_index 3
 #define sizeOfAltArray 100
-#define HEARTBEAT_INTERVAL 2000 // in milliseconds
+#define HEARTBEAT_INTERVAL 1000 // in milliseconds
 #define SEND_HEARTBEAT 0xFE
 //#define HEARTBEAT_LENGTH 1 // length of heartbeat in bytes
 
@@ -375,6 +375,9 @@ Returns
     none
 Description
     This function generates a "heart beat" message over the XBee radio.
+    Placing this function in the 10 Hz loop within UserCode.pde in case
+    the slower loops run with less priority. I am seeing some delay every
+    three or so cycles of heartbeats.
 Notes
     none yet
 Author
