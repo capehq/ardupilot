@@ -187,7 +187,7 @@ static float get_throttle_land()
     // if we are above 10m and the sonar does not sense anything perform regular alt hold descent
     if (current_loc.alt >= LAND_START_ALT && !(sonar_ok && sonar_alt_health >= SONAR_ALT_HEALTH_MAX)) {
         return pos_control.get_speed_down();
-    } else if (current_loc.alt<g) { // at 5m above the ground
+    } else if (current_loc.alt<g.final_land_alt) { // at alt above the ground determined from final_land_alt parameter (default 5m)
         return -abs(g.land_speed/4); // g: this would be for an approach where land_speed is set around 200cm/s
     } else {
         return -abs(g.land_speed);
