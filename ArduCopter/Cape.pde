@@ -386,7 +386,7 @@ Author
 
 
 void Cape_PulseGen() {
-    // This function runs at 1Hz
+    // This function runs at 10Hz
     static uint16_t lastTime = 0;
     uint16_t currentTime;
     uint16_t diffTime;
