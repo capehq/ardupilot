@@ -56,7 +56,7 @@ void Cape_init() {
 
 void Cape_FastLoop() {
     if(Cape_ReadFromWearable()) {
-        time_last_update=hal.scheduler->millis()-time_cape_ROI_update;
+        // time_last_update=hal.scheduler->millis()-time_cape_ROI_update;
         // gcs_send_text_P(SEVERITY_HIGH,PSTR("Read from wearable"));
         char buff[100];
         gcs_send_text_P(SEVERITY_HIGH, PSTR(itoa(time_last_update,buff,10)));
@@ -111,6 +111,10 @@ int Cape_ReadFromWearable() {
     int message_received = 0;
 
     if(hal.uartE) {
+        time_last_update=hal.scheduler->millis()-time_last_update;
+        char buff[100];
+        gcs_send_text_P(SEVERITY_HIGH, PSTR(itoa(time_last_update,buff,10)));
+        time_last_update = hal.scheduler->millis();
         int16_t new_byte = hal.uartE->read();
         while(new_byte != -1) {
             if(Cape_ValidateMessage(new_byte))
