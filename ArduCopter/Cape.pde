@@ -34,6 +34,8 @@ static bool _cape_waiting_for_takeoff = true;
 static AP_Mission::Mission_Command _cape_wearable_prev_nav_cmd; 
 static AP_Mission::Mission_Command _cape_wearable_curr_nav_cmd; //current waypoint ahead of user
 
+static long time_last_update;
+
 void Cape_init() {
     // Set up Serial 4
     if(hal.uartE) {
