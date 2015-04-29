@@ -35,6 +35,8 @@ static AP_Mission::Mission_Command _cape_wearable_prev_nav_cmd;
 static AP_Mission::Mission_Command _cape_wearable_curr_nav_cmd; //current waypoint ahead of user
 
 static long time_last_update;
+static long time_between_updates;
+static long current_time;
 
 void Cape_init() {
     // Set up Serial 4
@@ -109,17 +111,13 @@ void Cape_MediumLoop() {
 
 int Cape_ReadFromWearable() {
     int message_received = 0;
-
     if(hal.uartE) {
-        time_last_update=hal.scheduler->millis()-time_last_update;
-        char buff[100];
-        gcs_send_text_P(SEVERITY_HIGH, PSTR(itoa(time_last_update,buff,10)));
-        time_last_update = hal.scheduler->millis();
         int16_t new_byte = hal.uartE->read();
         while(new_byte != -1) {
+            // debug_schmutz();
             if(Cape_ValidateMessage(new_byte))
                 message_received = 1;
-
+                return message_received;
             // Try to read another byte
             new_byte = hal.uartE->read();
         }
@@ -128,9 +126,23 @@ int Cape_ReadFromWearable() {
     return message_received;
 }
 
-
+void debug_schmutz() {
+    current_time=hal.scheduler->millis();
+    time_between_updates=current_time-time_last_update;
+    char buff[100];
+    gcs_send_text_P(SEVERITY_HIGH, PSTR(itoa(time_between_updates,buff,10)));
+    time_last_update = current_time;
+}
 
 int Cape_ValidateMessage(uint8_t byte) {
+    // char buff[100];
+    // gcs_send_text_P(SEVERITY_HIGH, PSTR(itoa(byte,buff,10)));
+    cliSerial->printf_P(PSTR("Byte received: %c %X %u \n"),byte,byte,byte);
+    if (_cape_bytes_received==0 && byte=='A') { // if byte == E
+        // debug_schmutz();
+        // char buff[100];
+        // gcs_send_text_P(SEVERITY_HIGH, PSTR(itoa(byte,buff,10)));
+    }
     // Check for invalid prefix
     if(_cape_bytes_received < 4) {
         if(byte != _cape_prefix[_cape_bytes_received]) {
@@ -138,6 +150,9 @@ int Cape_ValidateMessage(uint8_t byte) {
             return 0;
         }
     }
+
+
+   
 
     // Add new byte to buffer
     _cape_rx_buffer[_cape_bytes_received] = byte;
