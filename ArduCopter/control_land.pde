@@ -10,7 +10,7 @@ static bool land_pause;
 // land_init - initialise land controller
 static bool land_init(bool ignore_checks)
 {
-    // check if we have GPS and decide which LAND we're going to do
+    // check if we have GPS and decide which LAND we're going to do 
     land_with_gps = GPS_ok();
     if (land_with_gps) {
         // set target to stopping point
