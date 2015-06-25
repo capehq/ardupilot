@@ -90,11 +90,11 @@ static void loiter_run()
 
         // body-frame rate controller is run directly from 100hz loop
 
-        // run altitude controller
-        if (sonar_alt_health >= SONAR_ALT_HEALTH_MAX) {
+        // run altitude controller  COMMENTED OUT BY NUR, 6/25/2015 !!!!!
+        //if (sonar_alt_health >= SONAR_ALT_HEALTH_MAX) {
             // if sonar is ok, use surface tracking
-            target_climb_rate = get_throttle_surface_tracking(target_climb_rate, pos_control.get_alt_target(), G_Dt);
-        }
+        //    target_climb_rate = get_throttle_surface_tracking(target_climb_rate, pos_control.get_alt_target(), G_Dt);
+        //}
 
         // update altitude target and call position controller
         pos_control.set_alt_target_from_climb_rate(target_climb_rate, G_Dt);
