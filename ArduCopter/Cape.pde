@@ -55,6 +55,7 @@ void Cape_FastLoop() {
             if (init_arm_motors()) {
                 set_auto_armed(true);
                 _cape_armed_once=true;
+                hal.uartE->flush(); // clear the XBee RX buffer
             }
         }
     }
@@ -234,6 +235,7 @@ void Cape_PulseCheck() {
             //gcs_send_text_P(SEVERITY_LOW, PSTR("UART has data."));
             //delay(500);
             uint8_t new_byte = hal.uartE->read(); // check XBee for new message
+            hal.uartE->flush(); // clear the XBee RX buffer
 
             #ifdef DEBUG
             // spoof a received message
@@ -258,6 +260,11 @@ void Cape_PulseCheck() {
             //delay(500);
             _cape_arm_state = false; // no heartbeat received in a while, disarm the wearable
             init_disarm_motors();
+            // added the following 4 lines on 2015.07.08 (aloo)
+            pre_arm_checks(false);
+            set_auto_armed(false);
+            _cape_armed_once = false;
+            _cape_arm_counter = 0;
         }
     }
     //gcs_send_text_P(SEVERITY_LOW, PSTR("Exiting pulse check routine."));
