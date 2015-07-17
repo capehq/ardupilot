@@ -18,13 +18,13 @@ static uint8_t _cape_tx_buffer[CAPE_MESSAGE_LENGTH] = "CAPE";
 #define PX4_WEARABLE_BTN                131
 
 #define HEARTBEAT_MESSAGE 0xFE
-#define HEARTBEAT_TIMEOUT 30000 // in milliseconds
+#define HEARTBEAT_TIMEOUT 15000 // in milliseconds
 //#define DEBUG
 
 void Cape_init() {
     // Set up Serial 4
     if(hal.uartE) {
-        hal.uartE->begin(9600, 32, 32);
+        hal.uartE->begin(9600, 2, 32);
     }
 }
 
@@ -55,7 +55,6 @@ void Cape_FastLoop() {
             if (init_arm_motors()) {
                 set_auto_armed(true);
                 _cape_armed_once=true;
-                hal.uartE->flush(); // clear the XBee RX buffer
             }
         }
     }
@@ -227,15 +226,15 @@ void Cape_PulseCheck() {
         //gcs_send_text_P(SEVERITY_LOW, PSTR("Not armed. Updating last time.\n"));
         //delay(500);
         lastTime = currentTime;
+        flush_Rx_buffer(); // clear the XBee Rx buffer.
     } 
     else {
         // Wearable is armed
         // First check if the XBee has received a heartbeat from the drone.
-        if (hal.uartE) {
+        if (hal.uartE-> available() > 0) {
             //gcs_send_text_P(SEVERITY_LOW, PSTR("UART has data."));
             //delay(500);
             uint8_t new_byte = hal.uartE->read(); // check XBee for new message
-            hal.uartE->flush(); // clear the XBee RX buffer
 
             #ifdef DEBUG
             // spoof a received message
@@ -249,7 +248,7 @@ void Cape_PulseCheck() {
 
             if (new_byte == HEARTBEAT_MESSAGE) {
                 // there was a new message and it was the correct heartbeat --> reset the timer
-                //gcs_send_text_P(SEVERITY_HIGH, PSTR("Heartbeat received.\n"));
+                gcs_send_text_P(SEVERITY_HIGH, PSTR("Heartbeat received.\n"));
                 //delay(500);
                 lastTime = currentTime;
             }
@@ -327,3 +326,28 @@ void Cape_PulseCheck() {
     return;
 }
 */
+
+// 2013-07-16 Addition for watchdog timer functionality
+// Added by Alex Loo
+/***********************************************************************
+Function
+    flush_Rx_buffer
+Parameters
+    none
+Returns
+    none
+Description
+    This function keeps reading the UART E's Rx buffer until it is clear.
+Notes
+    none yet
+Author
+    Alex Loo
+***********************************************************************/
+void flush_Rx_buffer() {
+    uint8_t garbageByte;
+
+    while (hal.uartE->available() > 0) {
+        garbageByte = hal.uartE->read();
+    }
+
+}
