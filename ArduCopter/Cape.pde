@@ -7,7 +7,7 @@
 #define CAPE_MESSAGE_ARM_DISARM 0x55
 #define early_wp_index 3
 #define sizeOfAltArray 100
-#define HEARTBEAT_INTERVAL 1000 // in milliseconds
+#define HEARTBEAT_INTERVAL 250 // in milliseconds
 #define SEND_HEARTBEAT 0xFE
 //#define HEARTBEAT_LENGTH 1 // length of heartbeat in bytes
 
