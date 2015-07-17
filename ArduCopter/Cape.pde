@@ -35,6 +35,8 @@ void Cape_FastLoop() {
             // Do nothing
         }
         if(_cape_arm_counter == CAPE_ARM_DELAY) {
+            // we want to arm the device
+            Cape_PulseCheck(); // Call it one more time to set last time and clear Rx buffer
             _cape_arm_state = !_cape_arm_state;
             _cape_arm_counter++;
         }
@@ -251,6 +253,7 @@ void Cape_PulseCheck() {
                 gcs_send_text_P(SEVERITY_HIGH, PSTR("Heartbeat received.\n"));
                 //delay(500);
                 lastTime = currentTime;
+                flush_Rx_buffer();
             }
         }
         // Second check if enough time has elapsed without a received heartbeat to disarm the wearable
